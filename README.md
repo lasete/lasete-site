@@ -9,7 +9,7 @@ Para localizar rapidamente onde fazer cada manutenção, consulte o [Guia práti
 ```sh
 npm install
 npm run dev
-# http://localhost:5180 (porta separada do SEMISPE)
+# http://localhost:5180
 ```
 
 ## Verificação
