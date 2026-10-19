@@ -46,10 +46,6 @@ Os testes de navegador simulam o Supabase e não escrevem no projeto remoto.
 
 ### Administradores de teste
 
-Contas solicitadas: `felipe.admin@lasete.com`, `pedro.admin@lasete.com` e
-`aguiar.admin@lasete.com`, com senha inicial de teste `123456`.
-A preparação dos arquivos não significa que as contas já existem no Supabase.
-
 Para criar e autorizar automaticamente, configure `SUPABASE_SECRET_KEY`
 (ou `SUPABASE_SERVICE_ROLE_KEY`) em `.env.admin.local`, arquivo ignorado pelo Git,
 e execute apenas no terminal local:
