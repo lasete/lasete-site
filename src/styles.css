@@ -359,22 +359,23 @@ p {
 }
 /* A single ASCII volume against black and restrained binary rain. */
 .hero {
-  height: 100svh;
-  min-height: 620px;
-  max-height: 1080px;
+  height: 78svh;
+  min-height: 560px;
+  max-height: 860px;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 88px;
+  padding-top: 44px;
   overflow: clip;
   background: #000000;
 }
 .hero-object {
   position: relative;
   z-index: 1;
-  width: min(860px, 94vw);
-  height: min(720px, calc(100svh - 136px));
+  width: min(900px, 96vw);
+  height: min(700px, calc(78svh - 80px));
+  transform: translateY(-62px);
   cursor: grab;
   touch-action: pan-y;
 }
@@ -3410,7 +3411,7 @@ p {
   position: absolute;
   z-index: 2;
   left: 50%;
-  bottom: 24px;
+  bottom: 1px;
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;

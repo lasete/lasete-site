@@ -101,16 +101,19 @@ Cada página pública tem seu próprio arquivo: para editar Membros, abra `src/p
 
 O conteúdo que a diretoria atualiza fica no Supabase. Para mudanças normais, use `/admin`; não altere os dados iniciais no código esperando que isso edite os registros atuais do banco.
 
-| Tipo no painel                | Tabela no Supabase |
-| ----------------------------- | ------------------ |
-| Membros                       | `members`          |
-| Projetos                      | `projects`         |
-| Pesquisas                     | `researches`       |
-| Atividades                    | `activities`       |
-| LASETE na mídia               | `media`            |
-| Comunicados                   | `notices`          |
-| Contato e seletivo            | `site_settings`    |
-| Permissões de administradores | `lasete_admins`    |
+| Tipo no painel                | Tabela no Supabase                             |
+| ----------------------------- | ---------------------------------------------- |
+| Membros                       | `members`                                      |
+| Projetos                      | `projects`                                     |
+| Pesquisas                     | `researches`                                   |
+| Atividades                    | `activities`                                   |
+| Ensino                        | `activities` (categoria iniciada por “Ensino”) |
+| LASETE na mídia               | `media`                                        |
+| Comunicados                   | `notices`                                      |
+| Contato e seletivo            | `site_settings`                                |
+| Permissões de administradores | `lasete_admins`                                |
+
+No painel, **Ensino** aparece como uma seção própria para facilitar a gestão. Seus registros continuam na tabela `activities`; a categoria “Ensino” os separa das demais atividades e os exibe na aba Ensino do site público.
 
 `src/lib/content.tsx` define os tipos de conteúdo, os dados iniciais de referência e o estado compartilhado usado pelas páginas. `content-api.ts` traduz os registros do banco para o formato usado no React. `supabase.ts` cria o cliente quando as variáveis de ambiente estão presentes. O SQL inicial e as políticas de acesso ficam em `docs/supabase-setup.sql`.
 

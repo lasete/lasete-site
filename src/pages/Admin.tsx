@@ -15,6 +15,7 @@ import {
   Newspaper,
   Microscope,
   CalendarDays,
+  GraduationCap,
   Megaphone,
   Settings2,
   LogOut,
@@ -58,6 +59,12 @@ const modules = [
     label: 'Atividades',
     singular: 'atividade',
     icon: CalendarDays,
+  },
+  {
+    type: 'teaching',
+    label: 'Ensino',
+    singular: 'conteúdo de ensino',
+    icon: GraduationCap,
   },
   { type: 'member', label: 'Membros', singular: 'membro', icon: Users },
   {
@@ -183,7 +190,20 @@ function withMemberProfile(
     group: memberGroupForCargo(values.cargo),
   };
 }
-type Module = ContentType | 'selection' | 'contact';
+type Module = ContentType | 'teaching' | 'selection' | 'contact';
+function isTeachingItem(item: ContentItem) {
+  return (
+    item.type === 'activity' &&
+    item.category.trim().toLocaleLowerCase('pt-BR').startsWith('ensino')
+  );
+}
+function isContentModuleItem(item: ContentItem, section: Module) {
+  if (section === 'teaching') return isTeachingItem(item);
+  if (section === 'activity')
+    return item.type === 'activity' && !isTeachingItem(item);
+  if (section === 'selection' || section === 'contact') return false;
+  return item.type === section;
+}
 function Field({
   label,
   children,
@@ -276,7 +296,7 @@ function AdminPanel() {
   const current = modules.find((m) => m.type === module);
   const matches = data.items.filter(
     (i) =>
-      i.type === module &&
+      isContentModuleItem(i, module) &&
       (module !== 'member' ||
         memberGroup === 'Todos' ||
         i.group === memberGroup) &&
@@ -316,6 +336,8 @@ function AdminPanel() {
       subtitle: editing.subtitle.trim(),
     };
     if (item.type === 'member') item = withMemberProfile(item);
+    if (module === 'teaching' && item.type === 'activity')
+      item.category = 'Ensino';
     if (item.type === 'research') item.author = item.author?.trim() ?? '';
     if (!item.title) {
       setError('Informe um título ou nome.');
@@ -345,13 +367,13 @@ function AdminPanel() {
     setError('');
     const item: ContentItem = {
       id: crypto.randomUUID(),
-      type: current.type,
+      type: module === 'teaching' ? 'activity' : (module as ContentType),
       title: '',
       subtitle: '',
       description: '',
       image: '',
       url: '',
-      category: '',
+      category: module === 'teaching' ? 'Ensino' : '',
       published: false,
       ...(current.type === 'member'
         ? {
@@ -418,7 +440,7 @@ function AdminPanel() {
     }
     persist({ ...data, settings });
   };
-  const moduleItems = data.items.filter((i) => i.type === module);
+  const moduleItems = data.items.filter((i) => isContentModuleItem(i, module));
   const publishedCount = moduleItems.filter((i) => i.published).length;
   const logout = async () => {
     setBusy(true);
@@ -450,7 +472,13 @@ function AdminPanel() {
             >
               <m.icon size={17} />
               {m.label}
-              <span>{data.items.filter((i) => i.type === m.type).length}</span>
+              <span>
+                {
+                  data.items.filter((i) =>
+                    isContentModuleItem(i, m.type as Module),
+                  ).length
+                }
+              </span>
             </button>
           ))}
           <div className="admin-nav-divider" />
@@ -1014,15 +1042,25 @@ function AdminPanel() {
                             ? 'Veículo de comunicação'
                             : 'Categoria'
                         }
+                        hint={
+                          editing.type === 'activity'
+                            ? module === 'teaching'
+                              ? 'Este conteúdo será publicado na aba Ensino.'
+                              : 'Use “Ensino” para organizar aulas e oficinas na seção Ensino do site.'
+                            : undefined
+                        }
                       >
                         <input
+                          disabled={module === 'teaching'}
                           maxLength={100}
                           placeholder={
                             editing.type === 'activity'
                               ? 'Ex.: Ensino, Workshop ou Conferência'
                               : ''
                           }
-                          value={editing.category}
+                          value={
+                            module === 'teaching' ? 'Ensino' : editing.category
+                          }
                           onChange={(e) =>
                             setEditing({
                               ...editing,

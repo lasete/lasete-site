@@ -58,9 +58,6 @@ export function Hero() {
           <HeroScene pointer={pointer} visible={visible} reduced={reduced} />
         </Suspense>
       </div>
-      <span className="hero-touch-hint" aria-hidden="true">
-        Toque para dispersar · arraste para girar
-      </span>
       <a className="hero-scroll" href="#conheca">
         <span className="scroll-mark" aria-hidden="true">
           <span />
