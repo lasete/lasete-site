@@ -375,7 +375,7 @@ p {
   z-index: 1;
   width: min(900px, 96vw);
   height: min(700px, calc(78svh - 80px));
-  transform: translateY(-62px);
+  transform: translateY(10px);
   cursor: grab;
   touch-action: pan-y;
 }
