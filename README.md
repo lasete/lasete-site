@@ -19,6 +19,43 @@ npm run build
 npm run test:e2e
 ```
 
+## Contribuindo
+
+Use `develop` como base para o trabalho do dia a dia. Crie uma branch nova para cada
+tarefa, com um prefixo que indique o tipo de mudança e um nome curto em kebab-case
+(minúsculas, sem espaços ou acentos):
+
+```sh
+git switch develop
+git pull origin develop
+git switch -c feat/nome-da-funcionalidade
+```
+
+Prefixos de branch recomendados:
+
+- `feat/`: funcionalidade nova
+- `fix/`: correção de bug
+- `refactor/`: refatoração sem mudar o comportamento
+- `docs/`: documentação
+- `style/`: formatação ou ajustes visuais sem mudança funcional
+- `perf/`: melhoria de desempenho
+- `test/`: criação ou alteração de testes
+- `chore/`: manutenção e configuração
+
+Faça commits pequenos e use o mesmo tipo como prefixo da mensagem, seguido de uma
+descrição objetiva. Exemplos: `feat: adiciona filtro de projetos` e
+`fix: corrige validação do formulário`. Os tipos seguem as categorias `feat`, `fix`,
+`refactor`, `docs`, `style`, `perf`, `test` e `chore`.
+
+Ao terminar, envie a branch e abra um pull request para `develop`:
+
+```sh
+git push -u origin feat/nome-da-funcionalidade
+```
+
+Não trabalhe diretamente em `develop` ou `main`. Use `main` para a versão publicada;
+integre mudanças nela pelo fluxo de release do projeto.
+
 ## Deploy na Vercel
 
 Use o preset **Vite**, o comando de build `npm run build` e o diretório de saída `dist`.
