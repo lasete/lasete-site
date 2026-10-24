@@ -68,10 +68,10 @@ export default function Home() {
           </p>
           <div className="inline-actions">
             <Button asChild>
-              <Link to="/a-liga">Conheça a liga</Link>
+              <Link to="/a-liga">Explore a liga</Link>
             </Button>
             <Link className="text-link" to="/membros">
-              Encontre nossa equipe
+              Conheça nossa equipe
             </Link>
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function Home() {
             />
           </div>
           <figcaption>
-            Conhecimento que se constrói junto. LASETE na Software House.
+            Conhecimento que se constrói junto.
           </figcaption>
         </figure>
         <div className="home-pillars">
