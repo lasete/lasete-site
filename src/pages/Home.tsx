@@ -12,6 +12,7 @@ import { Mail, Network } from 'lucide-react';
 import { useContent, usePublished } from '@/lib/content';
 import { safeUrl } from '@/lib/utils';
 import { Hero } from '@/components/Hero';
+import { NetworkInterlude } from '@/components/NetworkInterlude';
 import { SectionHeading, ContentCard, safeImage } from '@/components/Shared';
 import { ProjectPreview } from '@/components/Projects';
 import { Button } from '@/components/ui/button';
@@ -113,6 +114,20 @@ export default function Home() {
           ))}
         </div>
       </section>
+      <NetworkInterlude />
+      <section className="shell section-space home-activities">
+        <SectionHeading
+          label="Atividades"
+          title="A liga acontece aqui."
+          link="Todas as atividades"
+          to="/atividades"
+        />
+        <div className="activity-grid">
+          {activities.slice(0, 3).map((item) => (
+            <ContentCard key={item.id} item={item} />
+          ))}
+        </div>
+      </section>
       <section className="section-surface">
         <div className="shell section-space">
           <SectionHeading
@@ -126,19 +141,6 @@ export default function Home() {
               <ProjectPreview item={item} key={item.id} />
             ))}
           </div>
-        </div>
-      </section>
-      <section className="shell section-space">
-        <SectionHeading
-          label="Atividades"
-          title="A liga acontece aqui."
-          link="Todas as atividades"
-          to="/atividades"
-        />
-        <div className="activity-grid">
-          {activities.slice(0, 3).map((item) => (
-            <ContentCard key={item.id} item={item} />
-          ))}
         </div>
       </section>
       <section className="shell home-knowledge">
