@@ -29,7 +29,7 @@ export function Brand() {
       <Emblem />
       <span>
         LASETE
-        <span className="brand-caption">UNDB · SEGURANÇA & TECNOLOGIA</span>
+        <span className="brand-caption">SEGURANÇA & TECNOLOGIA</span>
       </span>
     </span>
   );

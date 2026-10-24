@@ -60,11 +60,10 @@ export default function Home() {
         data-matrix="continuation"
       >
         <div className="home-intro-copy" data-reveal>
-          <span className="section-label">LASETE · UNDB</span>
+          <span className="section-label">LASETE</span>
           <h1>Segurança e tecnologia se constroem em comunidade.</h1>
           <p>
-            Somos a Liga Acadêmica de Segurança e Tecnologias Emergentes da
-            UNDB. Um encontro de estudantes que transformam o interesse por
+            Somos a Liga Acadêmica de Segurança e Tecnologias Emergentes da UNDB. Um encontro de estudantes que transformam o interesse por
             tecnologia em estudo, projetos e experiências compartilhadas.
           </p>
           <div className="inline-actions">
@@ -86,7 +85,7 @@ export default function Home() {
             />
           </div>
           <figcaption>
-            Conhecimento que se constrói junto. LASETE, na UNDB.
+            Conhecimento que se constrói junto. LASETE na Software House.
           </figcaption>
         </figure>
         <div className="home-pillars">

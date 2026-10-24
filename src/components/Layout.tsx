@@ -109,7 +109,7 @@ function Header() {
               </a>
               <p>
                 Liga Acadêmica de Segurança
-                <br />e Tecnologias Emergentes · UNDB
+                <br />e Tecnologias Emergentes
               </p>
             </DialogContent>
           </Dialog>
@@ -130,7 +130,7 @@ function Footer() {
             </Link>
             <p>
               Liga Acadêmica de Segurança
-              <br />e Tecnologias Emergentes da UNDB.
+              <br />e Tecnologias Emergentes.
             </p>
             <span>São Luís, Maranhão</span>
           </div>
@@ -180,7 +180,7 @@ function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} LASETE · UNDB</span>
+          <span>© {new Date().getFullYear()} LASETE </span>
           <span>Ensino, pesquisa e extensão.</span>
         </div>
       </div>
