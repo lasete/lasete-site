@@ -129,7 +129,7 @@ export default function Home() {
         </div>
       </section>
       <section className="section-surface">
-        <div className="shell section-space">
+        <div className="shell section-space home-projects-section">
           <SectionHeading
             label="Projetos"
             title="Do estudo à prática."
@@ -140,6 +140,72 @@ export default function Home() {
             {projects.slice(0, 2).map((item) => (
               <ProjectPreview item={item} key={item.id} />
             ))}
+            <svg
+              className="project-fracture project-fracture-desktop"
+              viewBox="0 0 80 1000"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <defs>
+                <pattern id="fracture-cyber-desktop" width="32" height="1000" patternUnits="userSpaceOnUse">
+                  <rect width="32" height="1000" fill="#141719" />
+                  <path d="M31.5 0V1000" fill="none" stroke="#dce6e8" strokeOpacity="0.035" />
+                </pattern>
+                <pattern id="fracture-ai-desktop" width="120" height="146" patternUnits="userSpaceOnUse">
+                  <rect width="120" height="146" fill="#102019" />
+                  <path d="M0 73H120" fill="none" stroke="#9cddbd" strokeOpacity="0.05" />
+                  <path d="M-33 0 75 146M153 0 45 146" fill="none" stroke="#9cddbd" strokeOpacity="0.075" />
+                </pattern>
+              </defs>
+              <path
+                className="project-fracture-cyber"
+                fill="url(#fracture-cyber-desktop)"
+                d="M0 0H43L38 86 57 158 31 252 45 326 23 438 55 511 36 625 48 699 25 822 42 908 34 1000H0Z"
+              />
+              <path
+                className="project-fracture-ai"
+                fill="url(#fracture-ai-desktop)"
+                d="M80 0H43L38 86 57 158 31 252 45 326 23 438 55 511 36 625 48 699 25 822 42 908 34 1000H80Z"
+              />
+              <path
+                className="project-fracture-cut"
+                d="M43 0 38 86 57 158 31 252 45 326 23 438 55 511 36 625 48 699 25 822 42 908 34 1000"
+              />
+            </svg>
+            <svg
+              className="project-fracture project-fracture-mobile"
+              viewBox="0 0 1000 136"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <defs>
+                <pattern id="fracture-cyber-mobile" width="96" height="136" patternUnits="userSpaceOnUse">
+                  <rect width="96" height="136" fill="#141719" />
+                  <path d="M95.5 0V136" fill="none" stroke="#dce6e8" strokeOpacity="0.035" />
+                </pattern>
+                <pattern id="fracture-ai-mobile" width="360" height="57" patternUnits="userSpaceOnUse">
+                  <rect width="360" height="57" fill="#102019" />
+                  <path d="M0 56.5H360" fill="none" stroke="#9cddbd" strokeOpacity="0.05" />
+                  <path d="M-75 0 105 57M285 0 105 57" fill="none" stroke="#9cddbd" strokeOpacity="0.075" />
+                </pattern>
+              </defs>
+              <path
+                className="project-fracture-cyber"
+                fill="url(#fracture-cyber-mobile)"
+                d="M0 0H1000V52L948 65 901 38 859 72 813 46 769 81 727 27 682 61 638 37 596 76 551 50 508 90 466 43 420 66 379 31 337 73 291 47 249 83 207 39 162 70 121 48 78 91 41 62 0 76Z"
+              />
+              <path
+                className="project-fracture-ai"
+                fill="url(#fracture-ai-mobile)"
+                d="M0 76 41 62 78 91 121 48 162 70 207 39 249 83 291 47 337 73 379 31 420 66 466 43 508 90 551 50 596 76 638 37 682 61 727 27 769 81 813 46 859 72 901 38 948 65 1000 52V136H0Z"
+              />
+              <path
+                className="project-fracture-cut"
+                d="M0 76 41 62 78 91 121 48 162 70 207 39 249 83 291 47 337 73 379 31 420 66 466 43 508 90 551 50 596 76 638 37 682 61 727 27 769 81 813 46 859 72 901 38 948 65 1000 52"
+              />
+            </svg>
           </div>
         </div>
       </section>
