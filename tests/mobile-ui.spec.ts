@@ -26,6 +26,8 @@ test('cubo responde a toque, gira no arraste lateral e permite rolar na vertical
 }) => {
   test.setTimeout(90000);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
+  // Pula a abertura L7 para testar o cubo já interativo.
+  await page.keyboard.press('Shift');
   const cube = page.locator('.hero-object');
   await expect(cube.locator('canvas')).toBeVisible({ timeout: 30000 });
   await page.addStyleTag({ content: '.matrix-canvas { visibility: hidden; }' });

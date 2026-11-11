@@ -5404,3 +5404,51 @@ p {
     transition: none;
   }
 }
+
+/* Abertura da Home: só o monograma L7 e o cubo em tela preta; o site entra quando ela termina. */
+html[data-intro] .site-header,
+html[data-intro] .matrix-canvas,
+html[data-intro] .hero-scroll,
+html[data-intro] .hero-touch-hint,
+html[data-intro] .hero .scene-fallback,
+html[data-intro] .home-page > :not(.hero),
+html[data-intro] .site-footer {
+  visibility: hidden;
+}
+html[data-intro] .hero-object {
+  cursor: default;
+}
+html[data-intro-done] .site-header,
+html[data-intro-done] .matrix-canvas,
+html[data-intro-done] .hero-scroll,
+html[data-intro-done] .hero-touch-hint {
+  animation: intro-reveal 0.7s ease-out both;
+}
+@keyframes intro-reveal {
+  from {
+    opacity: 0;
+  }
+}
+.hero-intro-name {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 10px;
+  margin: 0;
+  transform: translateX(-50%);
+  font-family: var(--font-code);
+  font-size: clamp(22px, 2.6vw, 34px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #f5f5f5;
+  pointer-events: none;
+  opacity: 0;
+  clip-path: inset(0 100% 0 0);
+  transition: opacity 0.35s ease-out;
+}
+/* O nome é "digitado" letra a letra quando o cubo termina de se formar. */
+html[data-intro='name'] .hero-intro-name {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 0.42s steps(6, end);
+}
