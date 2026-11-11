@@ -17,13 +17,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ContentProvider>
-          <Suspense
-            fallback={
-              <div className="route-loading" role="status">
-                Abrindo a liga<span>...</span>
-              </div>
-            }
-          >
+          <Suspense fallback={null}>
             <Routes>
               <Route path="/admin" element={<Admin />} />
               <Route element={<Layout />}>
