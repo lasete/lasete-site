@@ -3,7 +3,8 @@ OWN-WORLD: preto neutro, caracteres brancos, espaço e tipografia de proporção
 STORY: explorar o símbolo, depois conhecer as pessoas e o trabalho da liga.
 FIRST VIEWPORT: navbar e um volume cúbico ASCII central, sem textos sobrepostos, com Matrix discreta ao fundo.
 FORM: composição explicitamente pedida na revisão; sem sorteio de direção. */
-import { lazy, Suspense, useRef } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
+import { introStage } from '@/lib/intro-l7';
 import { useAsciiInteraction } from '@/lib/ascii-interaction';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -15,6 +16,8 @@ export function Hero() {
   const root = useRef<HTMLElement>(null);
   const interaction = useAsciiInteraction();
   const { pointer, visible, reduced, dragging } = interaction;
+  // O nome só existe no DOM em carregamentos que tocam a abertura; o CSS controla quando aparece.
+  const [hadIntro] = useState(() => introStage() !== 'off');
   useGSAP(
     () => {
       if (reduced) return;
@@ -58,6 +61,11 @@ export function Hero() {
           <HeroScene pointer={pointer} visible={visible} reduced={reduced} />
         </Suspense>
       </div>
+      {hadIntro && (
+        <p className="hero-intro-name" aria-hidden="true">
+          Lasete
+        </p>
+      )}
       <a className="hero-scroll" href="#conheca">
         <span className="scroll-mark" aria-hidden="true">
           <span />

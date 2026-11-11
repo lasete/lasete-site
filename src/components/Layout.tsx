@@ -11,6 +11,7 @@ import { navItems, useContent } from '@/lib/content';
 import { safeUrl } from '@/lib/utils';
 import { useScrollReveal } from '@/lib/motion';
 import { usePointerHighlight } from '@/lib/pointer-highlight';
+import { introStage, subscribeIntro } from '@/lib/intro-l7';
 import { Brand } from './Brand';
 import { Matrix } from './Matrix';
 import { Button } from './ui/button';
@@ -210,6 +211,15 @@ export function Layout() {
       lenis.destroy();
       lenisRef.current = null;
     };
+  }, [reduced]);
+  // A página não rola enquanto a abertura da Home está na tela.
+  useEffect(() => {
+    const sync = () => {
+      if (introStage() === 'off') lenisRef.current?.start();
+      else lenisRef.current?.stop();
+    };
+    sync();
+    return subscribeIntro(sync);
   }, [reduced]);
   useEffect(() => {
     if (!hash) {

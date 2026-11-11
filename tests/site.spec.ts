@@ -16,6 +16,11 @@ const routes = [
   '/atividades',
   '/participar',
 ];
+// A abertura L7 cobre a Home por alguns segundos; os testes do site a pulam como um visitante faria.
+async function openHome(page: Page) {
+  await page.goto('/');
+  await page.keyboard.press('Shift');
+}
 async function loadImages(page: Page) {
   await page.evaluate(async () => {
     for (const image of document.images) image.loading = 'eager';
@@ -78,7 +83,7 @@ test('sete páginas, navegação completa e conteúdo sem overflow', async ({
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/');
+  await openHome(page);
   await expect(page.locator('nav[aria-label="Principal"] a')).toHaveCount(7);
   await expect(
     page
@@ -261,7 +266,7 @@ test('dispersão da hero fica perto do mouse e a forma se recompõe ao sair', as
   page,
 }) => {
   test.setTimeout(90000);
-  await page.goto('/');
+  await openHome(page);
   await expect(page.locator('.hero-object canvas')).toBeVisible({
     timeout: 30000,
   });
@@ -319,14 +324,17 @@ test('dispersão da hero fica perto do mouse e a forma se recompõe ao sair', as
 test('Matrix preserva a Home e continua no fundo das páginas internas', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openHome(page);
   await expect(page.locator('.matrix-canvas')).toHaveCount(1);
   const field = await page.locator('.matrix-canvas').elementHandle();
   await page
     .getByRole('link', { name: 'Explore a LASETE', exact: true })
     .click();
   await expect(page.locator('#conheca h1')).toBeInViewport();
-  await expect.poll(() => matrixPaint(page)).toBeGreaterThan(0);
+  // A primeira leitura de pixels espera a GPU em software terminar a cena 3D (3 a 5 s no headless).
+  await expect
+    .poll(() => matrixPaint(page), { timeout: 20000 })
+    .toBeGreaterThan(0);
   expect(
     await page
       .locator('.matrix-canvas')
@@ -396,7 +404,7 @@ test('edição preserva data de origem e o destino da IA em todos os acessos', a
     .getByRole('dialog')
     .getByRole('button', { name: 'Salvar conteúdo' })
     .click();
-  await page.goto('/');
+  await openHome(page);
   await expect(page.locator('.ai-nav')).toHaveAttribute(
     'href',
     'https://example.com/outra-ia',
@@ -425,7 +433,7 @@ test.describe('celular', () => {
         route,
       ).toBe(true);
     }
-    await page.goto('/');
+    await openHome(page);
     await expect(page.locator('.hero-object canvas')).toBeVisible();
     await expect(page.locator('.matrix-canvas')).toHaveCount(0);
     await loadImages(page);
@@ -488,7 +496,7 @@ test('seletor acompanha o teclado e o menu libera a tela ao mudar para desktop',
 test('mudar a preferência de movimento encerra a Matrix e revela o conteúdo sem recarregar', async ({
   page,
 }) => {
-  await page.goto('/');
+  await openHome(page);
   await expect(page.locator('.matrix-canvas')).toHaveCount(1);
   await expect(page.locator('.home-intro-copy')).toHaveCSS('opacity', '0');
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -754,4 +762,52 @@ test('404 preserva a recuperação mesmo sem WebGL', async ({ page }) => {
   await page.getByRole('link', { name: 'Voltar à Home', exact: true }).click();
   await expect(page).toHaveURL('/');
   await expect(page.locator('.hero')).toBeVisible();
+});
+
+test('abertura L7 cobre a Home, forma o cubo, mostra o nome e não repete ao voltar', async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  const html = page.locator('html');
+  await page.goto('/');
+  await expect(html).toHaveAttribute('data-intro', /wait|play/);
+  await expect(page.locator('.site-header')).toBeHidden();
+  await expect(page.locator('.matrix-canvas')).toBeHidden();
+  await expect(html).toHaveAttribute('data-intro', 'name', { timeout: 40000 });
+  await expect(page.locator('.hero-intro-name')).toHaveText('Lasete');
+  await expect(page.locator('.hero-intro-name')).toHaveCSS('opacity', '1');
+  await expect(html).not.toHaveAttribute('data-intro', /.*/, {
+    timeout: 20000,
+  });
+  await expect(page.locator('.site-header')).toBeVisible();
+  await expect(page.locator('.hero-intro-name')).toHaveCSS('opacity', '0');
+  const nav = page.getByRole('navigation', { name: 'Principal' });
+  await nav.getByRole('link', { name: 'Projetos', exact: true }).click();
+  await expect(page).toHaveURL(/\/projetos$/);
+  await page.getByRole('link', { name: 'LASETE — início' }).first().click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator('.hero-object canvas')).toBeVisible();
+  await expect(html).not.toHaveAttribute('data-intro', /.*/);
+  await expect(page.locator('.hero-intro-name')).toHaveCount(0);
+});
+test('abertura L7 pode ser pulada e não toca fora da Home nem com movimento reduzido', async ({
+  page,
+}) => {
+  const html = page.locator('html');
+  await page.goto('/');
+  await expect(html).toHaveAttribute('data-intro', /wait|play/);
+  await page.mouse.click(700, 500);
+  await expect(html).not.toHaveAttribute('data-intro', /.*/);
+  await expect(page.locator('.site-header')).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Explore a LASETE', exact: true }),
+  ).toBeVisible();
+  await page.goto('/projetos');
+  await expect(html).not.toHaveAttribute('data-intro', /.*/);
+  await page.goto('/#conheca');
+  await expect(html).not.toHaveAttribute('data-intro', /.*/);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await expect(html).not.toHaveAttribute('data-intro', /.*/);
+  await expect(page.locator('.site-header')).toBeVisible();
 });

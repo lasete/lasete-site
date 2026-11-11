@@ -9,6 +9,14 @@ import {
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Emblem } from './Brand';
+import {
+  endIntro,
+  introFrame,
+  l7Starts,
+  subscribeIntro,
+  L7_SLANT,
+  L7_SHIFT,
+} from '@/lib/intro-l7';
 export type PointerState = {
   x: number;
   y: number;
@@ -93,6 +101,11 @@ function makeVolume() {
   );
   geometry.setAttribute('aSeed', new THREE.Float32BufferAttribute(seeds, 1));
   geometry.setAttribute('aGlyph', new THREE.Float32BufferAttribute(glyphs, 1));
+  // Ponto de partida de cada caractere no monograma L7 da abertura.
+  const intro = l7Starts(seeds.length, random);
+  geometry.setAttribute('aStart', new THREE.BufferAttribute(intro.start, 3));
+  geometry.setAttribute('aSide', new THREE.BufferAttribute(intro.side, 1));
+  geometry.setAttribute('aShow', new THREE.BufferAttribute(intro.show, 1));
   return geometry;
 }
 function glyphAtlas() {
@@ -114,9 +127,21 @@ function glyphAtlas() {
 }
 const vertexShader = `
 attribute vec3 aNormal; attribute float aSeed; attribute float aGlyph;
+attribute vec3 aStart; attribute float aSide; attribute float aShow;
 uniform vec4 uHits[6]; uniform float uSize;
-varying float vGlyph; varying float vLight; varying float vFacing;
+uniform float uMorph; uniform float uSplit; uniform float uApart; uniform float uFade;
+varying float vGlyph; varying float vLight; varying float vFacing; varying float vAlpha;
 void main() {
+  // Abertura: uSplit 1 = monograma L7, 0 = moldura; uApart 1 = L e 7 afastados;
+  // uMorph 0 = plano, 1 = volume. Em repouso (uMorph 1, uFade 1, resto 0) nada muda.
+  float local = clamp(uMorph * 2.2 - aSeed * 1.2, 0.0, 1.0);
+  float formed = local * local * (3.0 - 2.0 * local);
+  vec3 scatter = vec3(sin(aSeed*93.0),cos(aSeed*47.0),sin(aSeed*71.0));
+  vec3 origin = aStart + vec3(${L7_SLANT.toFixed(2)}, 1.0, 0.0) * (aSide * uSplit * ${L7_SHIFT.toFixed(2)});
+  origin.y += aSide * uApart * 0.7;
+  vec3 base = mix(origin, position, formed) + scatter * sin(local * 3.14159) * (.18 + aSeed * .3);
+  vec3 surface = normalize(mix(vec3(0.0, 0.0, 1.0), aNormal, formed) + vec3(0.0, 0.0, .0001));
+  vAlpha = uFade * mix(aShow, 1.0, smoothstep(.05, .45, local));
   vec3 shift = vec3(0.0);
   for (int i = 0; i < 6; i++) {
     vec3 delta = position - uHits[i].xyz;
@@ -125,8 +150,8 @@ void main() {
     shift += direction * strength * (.42 + aSeed*.28);
   }
   shift = shift / max(1.0, length(shift) / .85);
-  vec4 view = modelViewMatrix * vec4(position + shift, 1.0);
-  vec3 n = normalize(normalMatrix * aNormal);
+  vec4 view = modelViewMatrix * vec4(base + shift, 1.0);
+  vec3 n = normalize(normalMatrix * surface);
   vFacing = smoothstep(-.08, .12, dot(n, normalize(-view.xyz)));
   vLight = .56 + .44 * max(dot(n, normalize(vec3(-.35,.8,1.0))),0.0);
   gl_Position = projectionMatrix * view;
@@ -134,10 +159,10 @@ void main() {
   vGlyph = aGlyph;
 }`;
 const fragmentShader = `
-uniform sampler2D uAtlas; varying float vGlyph; varying float vLight; varying float vFacing;
+uniform sampler2D uAtlas; varying float vGlyph; varying float vLight; varying float vFacing; varying float vAlpha;
 void main() {
   vec2 uv = vec2((gl_PointCoord.x + floor(vGlyph))/16.0, 1.0-gl_PointCoord.y);
-  float alpha = texture2D(uAtlas, uv).a * vFacing;
+  float alpha = texture2D(uAtlas, uv).a * vFacing * vAlpha;
   if (alpha < .07) discard;
   gl_FragColor = vec4(vec3(vLight), alpha);
 }`;
@@ -151,6 +176,7 @@ function Symbol({
   model?: AsciiModel;
 }) {
   const group = useRef<THREE.Group>(null);
+  const material = useRef<THREE.ShaderMaterial>(null);
   const { camera, raycaster, invalidate, size } = useThree();
   useEffect(() => {
     if (model) {
@@ -192,6 +218,10 @@ function Symbol({
         ),
       },
       uSize: { value: 10 },
+      uMorph: { value: 1 },
+      uSplit: { value: 0 },
+      uApart: { value: 0 },
+      uFade: { value: 1 },
     }),
     [atlas],
   );
@@ -222,8 +252,11 @@ function Symbol({
     };
   }, [pointer, invalidate]);
   useEffect(() => {
+    if (reduced) endIntro();
     invalidate();
   }, [reduced, invalidate]);
+  // Pular a abertura precisa de um quadro novo para o cubo assumir a forma final.
+  useEffect(() => subscribeIntro(() => invalidate()), [invalidate]);
   useEffect(
     () => () => {
       geometry.dispose();
@@ -238,12 +271,28 @@ function Symbol({
     const time = reduced ? 0 : state.clock.elapsedTime;
     const x = p.rx;
     const y = p.ry;
-    group.current.rotation.x = reduced
-      ? x
-      : THREE.MathUtils.damp(group.current.rotation.x, x, 15, delta);
-    group.current.rotation.y = reduced
-      ? y
-      : THREE.MathUtils.damp(group.current.rotation.y, y, 15, delta);
+    // Só o cubo da hero tem abertura; os outros modelos ASCII seguem como estão.
+    const intro = model ? null : introFrame(performance.now());
+    // O fiber copia os uniforms para o material; valores numéricos são escritos direto nele.
+    const live = material.current?.uniforms;
+    if (live) {
+      live.uMorph.value = intro ? intro.morph : 1;
+      live.uSplit.value = intro ? intro.split : 0;
+      live.uApart.value = intro ? intro.apart : 0;
+      live.uFade.value = intro ? intro.fade : 1;
+    }
+    if (intro) {
+      // O monograma começa de frente e gira até o ângulo da hero enquanto vira volume.
+      group.current.rotation.x = x * intro.turn;
+      group.current.rotation.y = y * intro.turn;
+    } else {
+      group.current.rotation.x = reduced
+        ? x
+        : THREE.MathUtils.damp(group.current.rotation.x, x, 15, delta);
+      group.current.rotation.y = reduced
+        ? y
+        : THREE.MathUtils.damp(group.current.rotation.y, y, 15, delta);
+    }
     group.current.updateMatrixWorld();
     let framing = false;
     if (model) {
@@ -272,7 +321,7 @@ function Symbol({
         ? 0
         : uniforms.uHits.value[i].w * Math.exp(-delta * (i === 0 ? 13 : 5));
     let hitting = false;
-    if (!reduced && p.hover) {
+    if (!reduced && p.hover && !intro) {
       math.cursor.set(p.x, p.y);
       raycaster.setFromCamera(math.cursor, camera);
       math.inverse.copy(group.current.matrixWorld).invert();
@@ -300,6 +349,7 @@ function Symbol({
       10.2 *
       state.gl.getPixelRatio() *
       Math.min(1.15, Math.max(0.72, state.size.height / 720));
+    if (intro) invalidate();
     if (
       !reduced &&
       ((uniforms.uHits.value[0].w > 0.001 && !hitting) ||
@@ -314,6 +364,7 @@ function Symbol({
     <group ref={group} rotation={[pointer.current.rx, pointer.current.ry, 0]}>
       <points geometry={geometry} frustumCulled={false}>
         <shaderMaterial
+          ref={material}
           uniforms={uniforms}
           vertexShader={vertexShader}
           fragmentShader={fragmentShader}
@@ -332,6 +383,10 @@ class SceneBoundary extends Component<
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
+  }
+  componentDidCatch() {
+    // Sem WebGL não há abertura: o emblema estático aparece direto.
+    endIntro();
   }
   render() {
     return this.state.failed ? this.props.fallback : this.props.children;
