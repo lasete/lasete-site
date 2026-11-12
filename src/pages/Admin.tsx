@@ -1,4 +1,11 @@
-import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react';
+import {
+  useEffect,
+  useState,
+  type FormEvent,
+  type ChangeEvent,
+  type ClipboardEvent,
+  type DragEvent,
+} from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePointerHighlight } from '@/lib/pointer-highlight';
@@ -238,6 +245,7 @@ function AdminPanel() {
   const { session } = useAuth();
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [params, setParams] = useSearchParams();
   const storageKey = `lasete-admin-view:${session?.user.id}`;
   const [view, setView] = useState(() => {
@@ -388,9 +396,41 @@ function AdminPanel() {
     };
     setEditing(item.type === 'member' ? withMemberProfile(item) : item);
   };
-  const upload = async (event: ChangeEvent<HTMLInputElement>) => {
+  // Escolher, soltar e colar passam pelo mesmo envio, com as mesmas regras.
+  const upload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !supabase || !editing) return;
+    event.target.value = '';
+    void uploadImage(file);
+  };
+  const hasFiles = (event: DragEvent) =>
+    event.dataTransfer.types.includes('Files');
+  const dragImage = (event: DragEvent) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setDragging(true);
+  };
+  const dropImage = (event: DragEvent) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setDragging(false);
+    void uploadImage(event.dataTransfer.files[0]);
+  };
+  // Um arquivo solto fora da área não pode fazer o navegador abri-lo no lugar do painel.
+  const ignoreStrayFile = (event: DragEvent) => {
+    if (hasFiles(event)) event.preventDefault();
+  };
+  const pasteImage = (event: ClipboardEvent) => {
+    const file = [...event.clipboardData.files].find((entry) =>
+      entry.type.startsWith('image/'),
+    );
+    if (!file) return;
+    event.preventDefault();
+    void uploadImage(file);
+  };
+  const uploadImage = async (file: File | undefined) => {
+    if (!file || !supabase || !editing || uploading) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       setError('Escolha uma imagem JPG, PNG ou WebP.');
       return;
@@ -904,6 +944,9 @@ function AdminPanel() {
               onSubmit={updateItem}
               className="editor-form"
               aria-busy={busy || uploading}
+              onPaste={pasteImage}
+              onDragOver={ignoreStrayFile}
+              onDrop={ignoreStrayFile}
             >
               <fieldset
                 disabled={busy || uploading}
@@ -1105,7 +1148,12 @@ function AdminPanel() {
                     </Field>
                   </>
                 )}
-                <div className="image-upload-field">
+                <div
+                  className={`image-upload-field ${dragging ? 'is-dragging' : ''}`}
+                  onDragOver={dragImage}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={dropImage}
+                >
                   <span>Imagem</span>
                   {editing.image && (
                     <img
@@ -1129,7 +1177,7 @@ function AdminPanel() {
                   <small>
                     {uploading
                       ? 'Enviando imagem…'
-                      : 'JPG, PNG ou WebP · até 5 MB.'}
+                      : 'JPG, PNG ou WebP · até 5 MB. Arraste, cole (Ctrl+V) ou escolha um arquivo.'}
                   </small>
                 </div>
                 <label className="publish-checkbox">

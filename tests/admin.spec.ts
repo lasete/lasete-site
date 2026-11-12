@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { mockSupabase } from './supabase-fixture';
 
 test('login valida senha, entra na área autorizada e sai', async ({ page }) => {
@@ -413,4 +413,95 @@ test('área Projetos gera o cargo e ordena a diretoria entre Extensão e Finance
   expect(at('Diretora de Projetos')).toBeGreaterThan(-1);
   expect(at('Diretor de Extensão')).toBeLessThan(at('Diretora de Projetos'));
   expect(at('Diretora de Projetos')).toBeLessThan(at('Diretor Financeiro'));
+});
+
+// Dispara drop ou paste sobre o seletor com um arquivo sintético (ou só texto, sem arquivo).
+async function sendToEditor(
+  page: Page,
+  selector: string,
+  kind: 'drop' | 'paste',
+  file?: { name: string; type: string },
+) {
+  await page.evaluate(
+    ({ selector, kind, file }) => {
+      const data = new DataTransfer();
+      if (file)
+        data.items.add(
+          new File([new Uint8Array([1, 2, 3])], file.name, { type: file.type }),
+        );
+      else data.setData('text/plain', 'texto colado');
+      const init = { bubbles: true, cancelable: true };
+      document
+        .querySelector(selector)!
+        .dispatchEvent(
+          kind === 'drop'
+            ? new DragEvent('drop', { ...init, dataTransfer: data })
+            : new ClipboardEvent('paste', { ...init, clipboardData: data }),
+        );
+    },
+    { selector, kind, file },
+  );
+}
+async function openProjectEditor(page: Page) {
+  await mockSupabase(page, { signedIn: true });
+  await page.goto('/admin', { waitUntil: 'domcontentloaded' });
+  await page
+    .getByRole('button', { name: 'Editar Capture the Flag', exact: true })
+    .click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+}
+test('imagem pode ser solta ou colada no editor', async ({ page }) => {
+  await openProjectEditor(page);
+  const preview = page.locator('.upload-preview');
+  await sendToEditor(page, '.image-upload-field', 'drop', {
+    name: 'a.png',
+    type: 'image/png',
+  });
+  await expect(preview).toHaveAttribute('src', /lasete-images.*\.png$/);
+  await sendToEditor(page, '.editor-form', 'paste', {
+    name: 'b.webp',
+    type: 'image/webp',
+  });
+  await expect(preview).toHaveAttribute('src', /lasete-images.*\.webp$/);
+  await expect(page.locator('.image-upload-field small')).toContainText(
+    'Arraste, cole (Ctrl+V) ou escolha um arquivo',
+  );
+});
+test('arquivo inválido ou texto colado não iniciam envio', async ({ page }) => {
+  await openProjectEditor(page);
+  const dialog = page.getByRole('dialog');
+  const before = (await page.locator('.upload-preview').count())
+    ? await page.locator('.upload-preview').getAttribute('src')
+    : null;
+  const uploads: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/storage/v1/object/')) uploads.push(request.url());
+  });
+  const url = page.url();
+  await sendToEditor(page, '.image-upload-field', 'drop', {
+    name: 'a.pdf',
+    type: 'application/pdf',
+  });
+  await expect(dialog).toContainText('Escolha uma imagem JPG, PNG ou WebP.');
+  const title = dialog.getByLabel('Título', { exact: true });
+  await title.fill('abc');
+  await sendToEditor(page, '.editor-form', 'paste');
+  await expect(title).toHaveValue('abc');
+  await expect(dialog).not.toContainText('Enviando imagem');
+  // Soltar fora da área não pode fazer o navegador abrir o arquivo.
+  const allowed = await page.evaluate(() => {
+    const data = new DataTransfer();
+    data.items.add(new File([new Uint8Array([1])], 'c.png', { type: 'image/png' }));
+    return document
+      .querySelector('.editor-form')!
+      .dispatchEvent(
+        new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: data }),
+      );
+  });
+  expect(allowed).toBe(false);
+  expect(page.url()).toBe(url);
+  expect(uploads).toHaveLength(0);
+  if (before)
+    await expect(page.locator('.upload-preview')).toHaveAttribute('src', before);
+  else await expect(page.locator('.upload-preview')).toHaveCount(0);
 });
