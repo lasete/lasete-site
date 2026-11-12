@@ -1372,6 +1372,10 @@ p {
 .research-fields {
   padding-top: 12px;
 }
+/* Na Home os temas vêm logo após os pilares e precisam do próprio respiro. */
+.home-page > .research-fields {
+  padding-block: clamp(64px, 6vw, 96px);
+}
 .research-field-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

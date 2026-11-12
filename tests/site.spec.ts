@@ -825,3 +825,26 @@ test('botão da hero é uma pílula legível que leva à apresentação', async 
   await expect(cue.locator('svg')).toHaveCount(1);
   await expect(cue).toHaveAttribute('href', '#conheca');
 });
+test('temas da liga ficam na Home, depois dos pilares, e saem de Pesquisas', async ({
+  page,
+}) => {
+  await openHome(page);
+  const fields = page.locator('.research-fields');
+  await expect(fields.getByText('Temas que dialogam com a liga')).toBeVisible();
+  await expect(fields.locator('.research-field')).toHaveCount(4);
+  const order = await page.evaluate(() =>
+    [...document.querySelector('.home-page')!.children].map(
+      (el) => el.className,
+    ),
+  );
+  const at = (name: string) => order.findIndex((c) => c.includes(name));
+  expect(at('home-intro')).toBeLessThan(at('research-fields'));
+  expect(at('research-fields')).toBeLessThan(at('network-interlude'));
+  await page.goto('/pesquisas');
+  await expect(
+    page.getByRole('heading', {
+      name: 'Investigações e aprendizados da liga.',
+    }),
+  ).toBeVisible();
+  await expect(page.locator('.research-fields')).toHaveCount(0);
+});
