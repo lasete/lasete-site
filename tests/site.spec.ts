@@ -848,3 +848,44 @@ test('temas da liga ficam na Home, depois dos pilares, e saem de Pesquisas', asy
   ).toBeVisible();
   await expect(page.locator('.research-fields')).toHaveCount(0);
 });
+test('busca de pesquisas filtra por título, tema e tipo, ignorando acentos', async ({
+  page,
+}) => {
+  await page.goto('/pesquisas');
+  const search = page.getByRole('searchbox', { name: 'Buscar pesquisas' });
+  const cards = page.locator('.research-results .content-card');
+  await expect(cards).toHaveCount(3);
+  await search.fill('visao computacional');
+  await expect(cards).toHaveCount(1);
+  await expect(cards.first()).toBeVisible();
+  await search.fill('SEGURANÇA');
+  await expect(cards).toHaveCount(1);
+  await search.fill('material educativo');
+  await expect(cards).toHaveCount(2);
+  await search.fill('educativo privacidade');
+  await expect(cards).toHaveCount(1);
+  await expect(page.locator('.research-search-status')).toHaveText(
+    '1 pesquisa',
+  );
+  await search.fill('   ');
+  await expect(cards).toHaveCount(3);
+  await search.fill('(.*?');
+  await expect(page.getByText('Nenhuma pesquisa encontrada')).toBeVisible();
+  await expect(page.locator('.research-search-status')).toHaveText(
+    '0 pesquisas',
+  );
+  await page.getByRole('button', { name: 'Limpar busca' }).click();
+  await expect(cards).toHaveCount(3);
+  await expect(search).toHaveValue('');
+});
+test('busca de pesquisas encontra pelo autor', async ({ page }) => {
+  const backend = await mockSupabase(page);
+  backend.tables.researches[0].author = 'Maria Souza, João Araújo';
+  await page.goto('/pesquisas');
+  const cards = page.locator('.research-results .content-card');
+  await page
+    .getByRole('searchbox', { name: 'Buscar pesquisas' })
+    .fill('joao araujo');
+  await expect(cards).toHaveCount(1);
+  await expect(cards.first()).toContainText('Maria Souza');
+});

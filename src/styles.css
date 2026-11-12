@@ -5342,6 +5342,61 @@ p {
   background-color: #0c100e;
 }
 
+/* Busca única de pesquisas: título, tema, tipo e autores no mesmo campo. */
+.research-search {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(340px, 100%);
+  height: 44px;
+  padding-inline: 14px;
+  border: 1px solid #292929;
+  border-radius: 8px;
+  background: #171717;
+  color: #8f8f8f;
+  transition: border-color 0.16s ease-out;
+}
+.research-search:focus-within {
+  border-color: #d4d4d4;
+  color: #ffffff;
+}
+.research-search > input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #f5f5f5;
+  font: inherit;
+  font-size: 14px;
+}
+.research-search > input::placeholder {
+  color: #8f8f8f;
+}
+.research-no-results {
+  padding-block: 40px 16px;
+  color: #a3a3a3;
+}
+.research-no-results > h3 {
+  color: #f5f5f5;
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.research-no-results > button {
+  min-height: 44px;
+  margin-top: 16px;
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+@media (max-width: 700px) {
+  .research-search {
+    width: 100%;
+  }
+}
+
 /* Keep the research list close to its introduction without shifting other pages. */
 .research-page > .page-intro {
   padding-bottom: 24px;
