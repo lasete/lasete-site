@@ -920,3 +920,39 @@ test('rodapé traz identidade, contato e copyright, sem links de páginas', asyn
     Math.abs(box!.x + box!.width / 2 - (shell!.x + shell!.width / 2)),
   ).toBeLessThan(2);
 });
+test('divisória dos projetos recorta os cards sem cobrir o conteúdo', async ({
+  page,
+}) => {
+  await openHome(page);
+  const split = page.locator('.home-projects-split');
+  await split.scrollIntoViewIfNeeded();
+  const cards = split.locator('.project-preview');
+  await expect(cards).toHaveCount(2);
+  for (const card of await cards.all())
+    expect(
+      await card.evaluate((el) => getComputedStyle(el).clipPath),
+    ).toContain('polygon');
+  await expect(split.locator('pattern')).toHaveCount(0);
+  await expect(
+    split.locator('.project-fracture-desktop .project-fracture-edge'),
+  ).toHaveCount(2);
+  for (const link of await split
+    .getByRole('link', { name: 'Explorar projeto' })
+    .all())
+    await link.click({ trial: true });
+});
+test('divisória some com um único projeto', async ({ page }) => {
+  const backend = await mockSupabase(page);
+  backend.tables.projects.splice(1);
+  await openHome(page);
+  const split = page.locator('.home-projects-split');
+  await split.scrollIntoViewIfNeeded();
+  const card = split.locator('.project-preview');
+  await expect(card).toHaveCount(1);
+  expect(await card.evaluate((el) => getComputedStyle(el).clipPath)).toBe(
+    'none',
+  );
+  await expect(split.locator('.project-fracture')).toHaveCount(0);
+  const [box, outer] = [await card.boundingBox(), await split.boundingBox()];
+  expect(box!.width).toBeGreaterThan(outer!.width - 4);
+});

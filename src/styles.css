@@ -5200,41 +5200,60 @@ p {
 .home-projects-section .project-preview-image {
   height: 260px;
 }
+.home-projects-split {
+  --fracture-reach: 32px;
+  --project-pad: clamp(16px, 2vw, 24px);
+  background: #070a09;
+}
+.home-projects-split:not(.is-fractured) {
+  grid-template-columns: 1fr;
+}
+/* Cada card avança além do centro e é recortado no traçado; o fundo vai inteiro até o corte. */
+.home-projects-split.is-fractured > .project-preview:first-of-type {
+  margin-right: calc(var(--fracture-reach) * -1);
+  padding-right: calc(var(--project-pad) + var(--fracture-reach) + 30px);
+  clip-path: var(--fracture-before);
+}
+.home-projects-split.is-fractured > .project-preview:last-of-type {
+  margin-left: calc(var(--fracture-reach) * -1);
+  padding-left: calc(var(--project-pad) + var(--fracture-reach) + 30px);
+  clip-path: var(--fracture-after);
+}
 .project-fracture {
-  position: absolute;
-  z-index: 1;
+  z-index: 3;
   display: block;
   pointer-events: none;
   overflow: visible;
 }
 .project-fracture-desktop {
+  position: absolute;
   top: 0;
-  bottom: 0;
   left: 50%;
-  width: 80px;
+  width: calc(var(--fracture-reach) * 2);
   height: 100%;
   transform: translateX(-50%);
 }
 .project-fracture-mobile {
   display: none;
 }
-.project-fracture-cyber,
-.project-fracture-ai {
-  stroke: none;
-}
-.project-fracture-cut {
+/* Filete de luz em cada borda do vão, na cor do próprio lado. */
+.project-fracture-edge {
   fill: none;
-  stroke: #090e0c;
-  stroke-width: 1.6;
-  stroke-linecap: square;
-  stroke-linejoin: bevel;
-  opacity: 0.94;
+  stroke: rgba(220, 230, 232, 0.55);
+  stroke-width: 1.25;
+  stroke-linejoin: miter;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 6px rgba(220, 230, 232, 0.35));
+}
+.project-fracture-edge[data-tone='ai'] {
+  stroke: rgba(156, 221, 189, 0.7);
+  filter: drop-shadow(0 0 6px rgba(156, 221, 189, 0.35));
 }
 .home-projects-split > .project-preview {
   position: relative;
   overflow: hidden;
   min-width: 0;
-  padding: clamp(16px, 2vw, 24px);
+  padding: var(--project-pad);
   background: #141719;
 }
 .home-projects-split > .project-preview::before,
@@ -5396,25 +5415,54 @@ p {
   .home-projects-split {
     grid-template-columns: 1fr;
   }
+  .home-projects-split {
+    --fracture-reach: 28px;
+    --project-pad: 18px;
+  }
   .project-fracture-desktop {
     display: none;
   }
+  /* Faixa sem altura no fluxo, exatamente entre os dois cards. */
   .project-fracture-mobile {
     display: block;
-    top: 50%;
-    left: 0;
+    position: relative;
+    order: 2;
     width: 100%;
-    height: 86px;
-    transform: translateY(-50%);
+    height: calc(var(--fracture-reach) * 2);
+    margin-block: calc(var(--fracture-reach) * -1);
   }
-  .home-projects-split > .project-preview + .project-preview {
-    border-top: 0;
+  .home-projects-split.is-fractured > .project-preview:first-of-type {
+    order: 1;
+    margin-right: 0;
+    margin-bottom: calc(var(--fracture-reach) * -1);
+    padding-right: var(--project-pad);
+    padding-bottom: calc(var(--project-pad) + var(--fracture-reach) + 26px);
+    clip-path: var(--fracture-before-mobile);
   }
-  .home-projects-split > .project-preview {
-    padding: 18px;
+  .home-projects-split.is-fractured > .project-preview:last-of-type {
+    order: 3;
+    margin-left: 0;
+    margin-top: calc(var(--fracture-reach) * -1);
+    padding-left: var(--project-pad);
+    padding-top: calc(var(--project-pad) + var(--fracture-reach) + 26px);
+    clip-path: var(--fracture-after-mobile);
   }
   .home-projects-section .project-preview-image {
     height: 170px;
+  }
+  /* A arte do LASETE AI encolhe para caber inteira na moldura menor. */
+  .home-projects-section .ai-project-art {
+    gap: 10px;
+  }
+  .home-projects-section .ai-project-signal {
+    width: 84px;
+  }
+  .home-projects-section .ai-project-signal > svg {
+    width: 30px;
+    height: 30px;
+  }
+  .home-projects-section .ai-project-label strong {
+    font-size: 18px;
   }
   .home-projects-section .project-preview-copy {
     padding-top: 14px;

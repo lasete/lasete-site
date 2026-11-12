@@ -240,3 +240,33 @@ test('login no HackRF mobile mantém campos reais e cabe no viewport', async ({
     page.getByRole('navigation', { name: 'Seções do painel' }),
   ).toBeVisible();
 });
+test('divisória dos projetos corta na horizontal sem cobrir conteúdo nem a arte', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.keyboard.press('Shift');
+  const split = page.locator('.home-projects-split');
+  await split.scrollIntoViewIfNeeded();
+  const cards = split.locator('.project-preview');
+  await expect(cards).toHaveCount(2);
+  for (const card of await cards.all())
+    expect(
+      await card.evaluate((el) => getComputedStyle(el).clipPath),
+    ).toContain('polygon');
+  await expect(split.locator('.project-fracture-mobile')).toBeVisible();
+  await expect(split.locator('.project-fracture-desktop')).toBeHidden();
+  for (const link of await split
+    .getByRole('link', { name: 'Explorar projeto' })
+    .all())
+    await link.click({ trial: true });
+  const art = split.locator('.ai-project-art');
+  expect(
+    await art.evaluate((el) => {
+      const frame = el.getBoundingClientRect();
+      return [...el.children].every((child) => {
+        const box = child.getBoundingClientRect();
+        return box.top >= frame.top && box.bottom <= frame.bottom;
+      });
+    }),
+  ).toBe(true);
+});

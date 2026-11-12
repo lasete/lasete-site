@@ -4,7 +4,7 @@ STORY: conhecer a proposta, explorar iniciativas, encontrar pessoas e entrar em 
 FIRST VIEWPORT: somente volume ASCII e navbar; apresentação inicia abaixo da dobra.
 FORM: composição definida pela revisão do responsável, com conteúdo em seções próprias. */
 import { Link } from 'react-router-dom';
-import { useRef } from 'react';
+import { useRef, type CSSProperties } from 'react';
 import { useReducedMotion } from '@/lib/preferences';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -17,6 +17,63 @@ import { ResearchFields } from '@/components/ResearchFields';
 import { SectionHeading, ContentCard, safeImage } from '@/components/Shared';
 import { ProjectPreview } from '@/components/Projects';
 import { Button } from '@/components/ui/button';
+// Rachadura entre os dois projetos: [posição ao longo do corte em %, desvio em px].
+// Os cards avançam FRACTURE_REACH px além do centro e são recortados neste traçado,
+// deixando um vão de FRACTURE_GAP px; o SVG só desenha o filete de luz de cada borda.
+const FRACTURE_REACH = 32;
+const FRACTURE_GAP = 8;
+const FRACTURE_DESKTOP = [
+  [0, 10],
+  [14, -18],
+  [27, 22],
+  [43, -8],
+  [56, 24],
+  [71, -20],
+  [86, 16],
+  [100, -6],
+] as const;
+const FRACTURE_MOBILE = [
+  [0, 8],
+  [12, -14],
+  [26, 16],
+  [41, -10],
+  [57, 18],
+  [72, -16],
+  [88, 12],
+  [100, -4],
+] as const;
+// side -1 é o card anterior ao corte (esquerda/cima); +1 é o posterior.
+function fractureClip(layout: 'desktop' | 'mobile', side: -1 | 1) {
+  const points = layout === 'desktop' ? FRACTURE_DESKTOP : FRACTURE_MOBILE;
+  const edge = points.map(([along, shift]) => {
+    const across =
+      side === -1
+        ? `calc(100% - ${FRACTURE_REACH - shift + FRACTURE_GAP / 2}px)`
+        : `${FRACTURE_REACH + shift + FRACTURE_GAP / 2}px`;
+    return layout === 'desktop' ? `${across} ${along}%` : `${along}% ${across}`;
+  });
+  const far = side === -1 ? '0' : '100%';
+  const corners =
+    layout === 'desktop'
+      ? [`${far} 100%`, `${far} 0`]
+      : [`100% ${far}`, `0 ${far}`];
+  return `polygon(${[...edge, ...corners].join(', ')})`;
+}
+function fractureEdge(layout: 'desktop' | 'mobile', side: -1 | 1) {
+  const points = layout === 'desktop' ? FRACTURE_DESKTOP : FRACTURE_MOBILE;
+  return points
+    .map(([along, shift], index) => {
+      const across = FRACTURE_REACH + shift + (side * FRACTURE_GAP) / 2;
+      return `${index ? 'L' : 'M'}${layout === 'desktop' ? `${across} ${along * 10}` : `${along * 10} ${across}`}`;
+    })
+    .join(' ');
+}
+const fractureStyle = {
+  '--fracture-before': fractureClip('desktop', -1),
+  '--fracture-after': fractureClip('desktop', 1),
+  '--fracture-before-mobile': fractureClip('mobile', -1),
+  '--fracture-after-mobile': fractureClip('mobile', 1),
+} as CSSProperties;
 export default function Home() {
   const root = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
@@ -51,6 +108,8 @@ export default function Home() {
     media = usePublished('media'),
     notices = usePublished('notice'),
     people = usePublished('member');
+  const preview = projects.slice(0, 2);
+  const fractured = preview.length === 2;
   const team = people.filter((p) => p.group === 'Diretoria').slice(0, 4);
   const s = data.settings;
   return (
@@ -65,7 +124,8 @@ export default function Home() {
           <span className="section-label">LASETE</span>
           <h1>Segurança e tecnologia se constroem em comunidade.</h1>
           <p>
-            Somos a Liga Acadêmica de Segurança e Tecnologias Emergentes da UNDB. Um encontro de estudantes que transformam o interesse por
+            Somos a Liga Acadêmica de Segurança e Tecnologias Emergentes da
+            UNDB. Um encontro de estudantes que transformam o interesse por
             tecnologia em estudo, projetos e experiências compartilhadas.
           </p>
           <div className="inline-actions">
@@ -86,9 +146,7 @@ export default function Home() {
               decoding="async"
             />
           </div>
-          <figcaption>
-            Conhecimento que se constrói junto.
-          </figcaption>
+          <figcaption>Conhecimento que se constrói junto.</figcaption>
         </figure>
         <div className="home-pillars">
           {[
@@ -138,76 +196,41 @@ export default function Home() {
             link="Explorar projetos"
             to="/projetos"
           />
-          <div className="home-projects home-projects-split">
-            {projects.slice(0, 2).map((item) => (
+          <div
+            className={`home-projects home-projects-split ${fractured ? 'is-fractured' : ''}`}
+            style={fractured ? fractureStyle : undefined}
+          >
+            {preview.map((item) => (
               <ProjectPreview item={item} key={item.id} />
             ))}
-            <svg
-              className="project-fracture project-fracture-desktop"
-              viewBox="0 0 80 1000"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <defs>
-                <pattern id="fracture-cyber-desktop" width="32" height="1000" patternUnits="userSpaceOnUse">
-                  <rect width="32" height="1000" fill="#141719" />
-                  <path d="M31.5 0V1000" fill="none" stroke="#dce6e8" strokeOpacity="0.035" />
-                </pattern>
-                <pattern id="fracture-ai-desktop" width="120" height="146" patternUnits="userSpaceOnUse">
-                  <rect width="120" height="146" fill="#102019" />
-                  <path d="M0 73H120" fill="none" stroke="#9cddbd" strokeOpacity="0.05" />
-                  <path d="M-33 0 75 146M153 0 45 146" fill="none" stroke="#9cddbd" strokeOpacity="0.075" />
-                </pattern>
-              </defs>
-              <path
-                className="project-fracture-cyber"
-                fill="url(#fracture-cyber-desktop)"
-                d="M0 0H43L38 86 57 158 31 252 45 326 23 438 55 511 36 625 48 699 25 822 42 908 34 1000H0Z"
-              />
-              <path
-                className="project-fracture-ai"
-                fill="url(#fracture-ai-desktop)"
-                d="M80 0H43L38 86 57 158 31 252 45 326 23 438 55 511 36 625 48 699 25 822 42 908 34 1000H80Z"
-              />
-              <path
-                className="project-fracture-cut"
-                d="M43 0 38 86 57 158 31 252 45 326 23 438 55 511 36 625 48 699 25 822 42 908 34 1000"
-              />
-            </svg>
-            <svg
-              className="project-fracture project-fracture-mobile"
-              viewBox="0 0 1000 136"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <defs>
-                <pattern id="fracture-cyber-mobile" width="96" height="136" patternUnits="userSpaceOnUse">
-                  <rect width="96" height="136" fill="#141719" />
-                  <path d="M95.5 0V136" fill="none" stroke="#dce6e8" strokeOpacity="0.035" />
-                </pattern>
-                <pattern id="fracture-ai-mobile" width="360" height="57" patternUnits="userSpaceOnUse">
-                  <rect width="360" height="57" fill="#102019" />
-                  <path d="M0 56.5H360" fill="none" stroke="#9cddbd" strokeOpacity="0.05" />
-                  <path d="M-75 0 105 57M285 0 105 57" fill="none" stroke="#9cddbd" strokeOpacity="0.075" />
-                </pattern>
-              </defs>
-              <path
-                className="project-fracture-cyber"
-                fill="url(#fracture-cyber-mobile)"
-                d="M0 0H1000V52L948 65 901 38 859 72 813 46 769 81 727 27 682 61 638 37 596 76 551 50 508 90 466 43 420 66 379 31 337 73 291 47 249 83 207 39 162 70 121 48 78 91 41 62 0 76Z"
-              />
-              <path
-                className="project-fracture-ai"
-                fill="url(#fracture-ai-mobile)"
-                d="M0 76 41 62 78 91 121 48 162 70 207 39 249 83 291 47 337 73 379 31 420 66 466 43 508 90 551 50 596 76 638 37 682 61 727 27 769 81 813 46 859 72 901 38 948 65 1000 52V136H0Z"
-              />
-              <path
-                className="project-fracture-cut"
-                d="M0 76 41 62 78 91 121 48 162 70 207 39 249 83 291 47 337 73 379 31 420 66 466 43 508 90 551 50 596 76 638 37 682 61 727 27 769 81 813 46 859 72 901 38 948 65 1000 52"
-              />
-            </svg>
+            {fractured &&
+              (['desktop', 'mobile'] as const).map((layout) => (
+                <svg
+                  key={layout}
+                  className={`project-fracture project-fracture-${layout}`}
+                  viewBox={
+                    layout === 'desktop'
+                      ? `0 0 ${FRACTURE_REACH * 2} 1000`
+                      : `0 0 1000 ${FRACTURE_REACH * 2}`
+                  }
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  {([-1, 1] as const).map((side) => (
+                    <path
+                      key={side}
+                      className="project-fracture-edge"
+                      data-tone={
+                        side === 1 && preview[1].id === 'lasete-ai'
+                          ? 'ai'
+                          : 'neutral'
+                      }
+                      d={fractureEdge(layout, side)}
+                    />
+                  ))}
+                </svg>
+              ))}
           </div>
         </div>
       </section>
