@@ -1,11 +1,7 @@
 import type { ContentItem } from './content';
 
 const normalize = (value: string) =>
-  value
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim();
+  value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
 // Uma busca só cobre título, subtítulo, autores e categoria ("Tipo · Tema").
 // Todas as palavras digitadas precisam aparecer; busca vazia aceita tudo.

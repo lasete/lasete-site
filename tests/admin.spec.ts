@@ -389,7 +389,9 @@ test('área Projetos gera o cargo e ordena a diretoria entre Extensão e Finance
     })
     .click();
   const dialog = page.getByRole('dialog');
-  await dialog.getByRole('combobox', { name: /^Área/ }).selectOption('Projetos');
+  await dialog
+    .getByRole('combobox', { name: /^Área/ })
+    .selectOption('Projetos');
   await dialog
     .getByRole('combobox', { name: /^Forma gramatical do cargo/ })
     .selectOption('masculine');
@@ -475,7 +477,8 @@ test('arquivo inválido ou texto colado não iniciam envio', async ({ page }) =>
     : null;
   const uploads: string[] = [];
   page.on('request', (request) => {
-    if (request.url().includes('/storage/v1/object/')) uploads.push(request.url());
+    if (request.url().includes('/storage/v1/object/'))
+      uploads.push(request.url());
   });
   const url = page.url();
   await sendToEditor(page, '.image-upload-field', 'drop', {
@@ -491,17 +494,26 @@ test('arquivo inválido ou texto colado não iniciam envio', async ({ page }) =>
   // Soltar fora da área não pode fazer o navegador abrir o arquivo.
   const allowed = await page.evaluate(() => {
     const data = new DataTransfer();
-    data.items.add(new File([new Uint8Array([1])], 'c.png', { type: 'image/png' }));
+    data.items.add(
+      new File([new Uint8Array([1])], 'c.png', { type: 'image/png' }),
+    );
     return document
       .querySelector('.editor-form')!
       .dispatchEvent(
-        new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: data }),
+        new DragEvent('drop', {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: data,
+        }),
       );
   });
   expect(allowed).toBe(false);
   expect(page.url()).toBe(url);
   expect(uploads).toHaveLength(0);
   if (before)
-    await expect(page.locator('.upload-preview')).toHaveAttribute('src', before);
+    await expect(page.locator('.upload-preview')).toHaveAttribute(
+      'src',
+      before,
+    );
   else await expect(page.locator('.upload-preview')).toHaveCount(0);
 });
