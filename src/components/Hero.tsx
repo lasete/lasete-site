@@ -9,6 +9,7 @@ import { useAsciiInteraction } from '@/lib/ascii-interaction';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ArrowDown } from 'lucide-react';
 import { Emblem } from './Brand';
 const HeroScene = lazy(() => import('./HeroScene'));
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -70,10 +71,8 @@ export function Hero() {
         Toque para dispersar · arraste para girar
       </span>
       <a className="hero-scroll" href="#conheca">
-        <span className="scroll-mark" aria-hidden="true">
-          <span />
-        </span>
         <span>Explore a LASETE</span>
+        <ArrowDown size={16} aria-hidden="true" />
       </a>
       <p id="symbol-instructions" className="sr-only">
         Passe o mouse para dispersar os caracteres e arraste para girar. Com o

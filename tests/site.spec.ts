@@ -811,3 +811,17 @@ test('abertura L7 pode ser pulada e não toca fora da Home nem com movimento red
   await expect(html).not.toHaveAttribute('data-intro', /.*/);
   await expect(page.locator('.site-header')).toBeVisible();
 });
+test('botão da hero é uma pílula legível que leva à apresentação', async ({
+  page,
+}) => {
+  await openHome(page);
+  const cue = page.getByRole('link', { name: 'Explore a LASETE', exact: true });
+  await expect(cue).toBeVisible();
+  await expect(cue).toHaveCSS('font-size', '14px');
+  await expect(cue).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(cue).toHaveCSS('border-top-style', 'solid');
+  expect((await cue.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await expect(cue.locator('.scroll-mark')).toHaveCount(0);
+  await expect(cue.locator('svg')).toHaveCount(1);
+  await expect(cue).toHaveAttribute('href', '#conheca');
+});

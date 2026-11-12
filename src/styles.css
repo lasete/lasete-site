@@ -3445,42 +3445,30 @@ p {
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-height: 44px;
-  padding: 6px 14px;
-  color: #ababab;
-  font-size: 12px;
+  padding: 0 20px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(10, 10, 10, 0.72);
+  backdrop-filter: blur(6px);
+  color: #ffffff;
+  font-size: 14px;
   white-space: nowrap;
-  transition: color 0.16s ease-out;
+  transition:
+    border-color 0.16s ease-out,
+    background 0.16s ease-out;
 }
 .hero-scroll:hover {
-  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(22, 22, 22, 0.82);
 }
-.scroll-mark {
-  position: relative;
-  width: 17px;
-  height: 27px;
-  border: 1px solid #707070;
-  border-radius: 12px;
+.hero-scroll > svg {
+  animation: hero-cue 1.8s ease-in-out infinite;
 }
-.scroll-mark > span {
-  position: absolute;
-  top: 6px;
-  left: 7px;
-  width: 1px;
-  height: 5px;
-  background: #d4d4d4;
-  animation: scroll-signal 2s ease-out infinite;
-}
-@keyframes scroll-signal {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.5;
-  }
-  55% {
-    transform: translateY(7px);
-    opacity: 1;
+@keyframes hero-cue {
+  50% {
+    transform: translateY(3px);
   }
 }
 .card-image,
@@ -3556,7 +3544,7 @@ p {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .scroll-mark > span {
+  .hero-scroll > svg {
     animation: none;
   }
   .content-card:hover .card-image,
