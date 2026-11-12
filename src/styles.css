@@ -351,23 +351,28 @@ p {
 }
 /* A single ASCII volume against black and restrained binary rain. */
 .hero {
-  height: 78svh;
-  min-height: 560px;
-  max-height: 860px;
+  --hero-pad: 88px;
+  --hero-object-h: min(720px, calc(100svh - 136px));
+  height: 100svh;
+  min-height: 620px;
+  max-height: 1080px;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-top: 44px;
+  padding-top: var(--hero-pad);
   overflow: clip;
   background: #000000;
 }
 .hero-object {
   position: relative;
   z-index: 1;
-  width: min(900px, 96vw);
-  height: min(700px, calc(78svh - 80px));
-  transform: translateY(10px);
+  width: min(860px, 94vw);
+  height: var(--hero-object-h);
+  /* Volta ao lugar com suavidade quando a abertura termina e a navbar entra.
+     Usa top porque o GSAP da hero assume transform/translate deste elemento. */
+  top: 0;
+  transition: top 0.7s ease-out;
   cursor: grab;
   touch-action: pan-y;
 }
@@ -2740,12 +2745,12 @@ p {
     width: 14px;
   }
   .hero {
+    --hero-pad: 76px;
+    --hero-object-h: min(118vw, calc(100svh - 156px));
     min-height: 580px;
-    padding-top: 76px;
   }
   .hero-object {
     width: 100%;
-    height: min(118vw, calc(100svh - 156px));
   }
 
   .mobile-navigation {
@@ -3436,7 +3441,7 @@ p {
   position: absolute;
   z-index: 2;
   left: 50%;
-  bottom: 1px;
+  bottom: 24px;
   transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
@@ -5407,8 +5412,10 @@ html[data-intro] .home-page > :not(.hero),
 html[data-intro] .site-footer {
   visibility: hidden;
 }
+/* Sem navbar, o símbolo ocupa o centro da tela inteira, não o da área abaixo dela. */
 html[data-intro] .hero-object {
   cursor: default;
+  top: calc(var(--hero-pad) / -2);
 }
 html[data-intro-done] .site-header,
 html[data-intro-done] .matrix-canvas,
@@ -5425,7 +5432,9 @@ html[data-intro-done] .hero-touch-hint {
   position: absolute;
   z-index: 2;
   left: 50%;
-  bottom: 10px;
+  /* Logo abaixo do cubo centralizado: símbolo e nome formam um bloco só no meio da tela. */
+  top: calc(50% + var(--hero-object-h) * 0.41);
+  line-height: 1.2;
   margin: 0;
   transform: translateX(-50%);
   font-family: var(--font-code);
