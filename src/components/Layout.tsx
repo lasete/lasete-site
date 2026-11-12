@@ -129,19 +129,11 @@ function Footer() {
             <Link to="/" aria-label="LASETE — início">
               <Brand />
             </Link>
-            <p>
-              Liga Acadêmica de Segurança
-              <br />e Tecnologias Emergentes.
-            </p>
+          </div>
+          <div className="footer-league">
+            <p>Liga Acadêmica de Segurança e Tecnologias Emergentes</p>
             <span>São Luís, Maranhão</span>
           </div>
-          <nav aria-label="Rodapé">
-            {navItems.map((item) => (
-              <Link key={item.to} to={item.to}>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
           <div className="footer-contact">
             <span className="section-label">Contato</span>
             <a href={`mailto:${data.settings.email}`}>{data.settings.email}</a>
@@ -181,8 +173,7 @@ function Footer() {
           </div>
         </div>
         <div className="footer-bottom">
-          <span>© {new Date().getFullYear()} LASETE </span>
-          <span>Ensino, pesquisa e extensão.</span>
+          <span>© {new Date().getFullYear()} LASETE</span>
         </div>
       </div>
     </footer>

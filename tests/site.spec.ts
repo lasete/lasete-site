@@ -889,3 +889,34 @@ test('busca de pesquisas encontra pelo autor', async ({ page }) => {
   await expect(cards).toHaveCount(1);
   await expect(cards.first()).toContainText('Maria Souza');
 });
+test('rodapé traz identidade, contato e copyright, sem links de páginas', async ({
+  page,
+}) => {
+  await page.goto('/a-liga');
+  const footer = page.locator('.site-footer');
+  await expect(footer.getByRole('navigation')).toHaveCount(0);
+  await expect(
+    footer.getByText('Liga Acadêmica de Segurança e Tecnologias Emergentes'),
+  ).toBeVisible();
+  await expect(footer.getByText('São Luís, Maranhão')).toBeVisible();
+  await expect(
+    footer.getByRole('link', { name: 'lasete.undb@gmail.com' }),
+  ).toHaveAttribute('href', 'mailto:lasete.undb@gmail.com');
+  await expect(
+    footer.getByRole('link', { name: 'Instagram da LASETE' }),
+  ).toBeVisible();
+  await expect(
+    footer.getByRole('link', { name: 'LinkedIn da LASETE' }),
+  ).toBeVisible();
+  await expect(
+    footer.getByRole('button', { name: 'Voltar ao topo' }),
+  ).toBeVisible();
+  await expect(footer.getByText('Ensino, pesquisa e extensão.')).toHaveCount(0);
+  const copy = footer.getByText(`© ${new Date().getFullYear()} LASETE`);
+  await expect(copy).toBeVisible();
+  const box = await copy.boundingBox(),
+    shell = await footer.locator('.shell').boundingBox();
+  expect(
+    Math.abs(box!.x + box!.width / 2 - (shell!.x + shell!.width / 2)),
+  ).toBeLessThan(2);
+});
