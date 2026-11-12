@@ -132,7 +132,7 @@ O if not exists permite rodar o comando novamente sem duplicar a coluna. Registr
 
 ### Adicionar ou editar um membro
 
-Em **Membros → Adicionar membro**, informe o nome e escolha o **Cargo**. As opções são presidente, vice-presidente, secretário-geral, diretor(a) de área, ligante e professor(a) orientador(a). O campo **Área** oferece Pesquisa, Ensino, Extensão, Comunicação e Financeiro para cargos de área; presidência, vice-presidência, secretaria e orientação recebem sua área correspondente automaticamente.
+Em **Membros → Adicionar membro**, informe o nome e escolha o **Cargo**. As opções são presidente, vice-presidente, secretário-geral, diretor(a) de área, ligante e professor(a) orientador(a). O campo **Área** oferece Pesquisa, Ensino, Extensão, Projetos, Comunicação e Financeiro para cargos de área; presidência, vice-presidência, secretaria e orientação recebem sua área correspondente automaticamente.
 
 Para cargos com flexão de gênero, escolha a **Forma gramatical do cargo**. Ela serve apenas para montar o texto publicado; o sistema não salva gênero como dado separado. A prévia mostra o cargo final, por exemplo, “Diretora de Comunicação”. A categoria do filtro (**Diretoria**, **Ligantes** ou **Orientadores**) é definida automaticamente pelo cargo escolhido.
 

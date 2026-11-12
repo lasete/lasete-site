@@ -365,3 +365,52 @@ test('evento de sessão da mesma conta não desmonta o editor ao voltar à aba',
   ).toHaveValue('Pedro — edição em andamento');
   await expect(page.getByText('Conferindo seu acesso.')).toHaveCount(0);
 });
+
+test('área Projetos gera o cargo e ordena a diretoria entre Extensão e Financeiro', async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  const backend = await mockSupabase(page, { signedIn: true });
+  const teaching = backend.tables.members.find(
+    (member) => member.role === 'Diretor de Ensino',
+  )!;
+  Object.assign(teaching, {
+    role: 'Diretor Financeiro',
+    subtitle: 'Diretor Financeiro',
+    area: 'Financeiro',
+    category: 'Financeiro',
+  });
+  await page.goto('/admin', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: /^Membros/ }).click();
+  await page
+    .getByRole('button', {
+      name: 'Editar Luiza Belfort Conceição dos Santos',
+      exact: true,
+    })
+    .click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('combobox', { name: /^Área/ }).selectOption('Projetos');
+  await dialog
+    .getByRole('combobox', { name: /^Forma gramatical do cargo/ })
+    .selectOption('masculine');
+  await expect(dialog.locator('.member-role-preview')).toContainText(
+    'Diretor de Projetos',
+  );
+  await dialog
+    .getByRole('combobox', { name: /^Forma gramatical do cargo/ })
+    .selectOption('feminine');
+  await expect(dialog.locator('.member-role-preview')).toContainText(
+    'Diretora de Projetos',
+  );
+  await page.getByRole('button', { name: 'Salvar conteúdo' }).click();
+  await expect(page.getByRole('status')).toContainText('Alterações salvas');
+  await page.goto('/membros', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('tab', { name: 'Diretoria', exact: true }).click();
+  const roles = await page
+    .locator('.member-card')
+    .evaluateAll((cards) => cards.map((card) => card.textContent ?? ''));
+  const at = (role: string) => roles.findIndex((text) => text.includes(role));
+  expect(at('Diretora de Projetos')).toBeGreaterThan(-1);
+  expect(at('Diretor de Extensão')).toBeLessThan(at('Diretora de Projetos'));
+  expect(at('Diretora de Projetos')).toBeLessThan(at('Diretor Financeiro'));
+});

@@ -84,6 +84,7 @@ const departmentAreas = [
   'Pesquisa',
   'Ensino',
   'Extensão',
+  'Projetos',
   'Comunicação',
   'Financeiro',
 ];
