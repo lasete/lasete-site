@@ -764,7 +764,7 @@ test('404 preserva a recuperação mesmo sem WebGL', async ({ page }) => {
   await expect(page.locator('.hero')).toBeVisible();
 });
 
-test('abertura L7 cobre a Home, forma o cubo, mostra o nome e não repete ao voltar', async ({
+test('abertura L7 cobre a Home, forma o cubo sem texto e não repete ao voltar', async ({
   page,
 }) => {
   test.setTimeout(90000);
@@ -773,14 +773,14 @@ test('abertura L7 cobre a Home, forma o cubo, mostra o nome e não repete ao vol
   await expect(html).toHaveAttribute('data-intro', /wait|play/);
   await expect(page.locator('.site-header')).toBeHidden();
   await expect(page.locator('.matrix-canvas')).toBeHidden();
-  await expect(html).toHaveAttribute('data-intro', 'name', { timeout: 40000 });
-  await expect(page.locator('.hero-intro-name')).toHaveText('Lasete');
-  await expect(page.locator('.hero-intro-name')).toHaveCSS('opacity', '1');
+  // A abertura mostra só o símbolo: nenhum texto aparece na hero enquanto ela toca.
+  await expect(html).toHaveAttribute('data-intro', 'play', { timeout: 40000 });
+  await expect(page.locator('.hero-intro-name')).toHaveCount(0);
+  await expect(page.locator('.hero-scroll')).toBeHidden();
   await expect(html).not.toHaveAttribute('data-intro', /.*/, {
     timeout: 20000,
   });
   await expect(page.locator('.site-header')).toBeVisible();
-  await expect(page.locator('.hero-intro-name')).toHaveCSS('opacity', '0');
   const nav = page.getByRole('navigation', { name: 'Principal' });
   await nav.getByRole('link', { name: 'Projetos', exact: true }).click();
   await expect(page).toHaveURL(/\/projetos$/);

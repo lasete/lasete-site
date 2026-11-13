@@ -5519,28 +5519,3 @@ html[data-intro-done] .hero-touch-hint {
     opacity: 0;
   }
 }
-.hero-intro-name {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  /* Logo abaixo do cubo centralizado: símbolo e nome formam um bloco só no meio da tela. */
-  top: calc(50% + var(--hero-object-h) * 0.41);
-  line-height: 1.2;
-  margin: 0;
-  transform: translateX(-50%);
-  font-family: var(--font-code);
-  font-size: clamp(22px, 2.6vw, 34px);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: #f5f5f5;
-  pointer-events: none;
-  opacity: 0;
-  clip-path: inset(0 100% 0 0);
-  transition: opacity 0.35s ease-out;
-}
-/* O nome é "digitado" letra a letra quando o cubo termina de se formar. */
-html[data-intro='name'] .hero-intro-name {
-  opacity: 1;
-  clip-path: inset(0 0 0 0);
-  transition: clip-path 0.42s steps(6, end);
-}

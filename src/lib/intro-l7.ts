@@ -2,8 +2,8 @@
 // Duas versões em avaliação, escolhidas por ?intro= na URL:
 //   moldura (padrão): começa no L7; o 7 sobe e o L desce até fecharem uma moldura, que vira o cubo.
 //   encaixe: o L e o 7 chegam separados, travam no L7, e o L7 vira o cubo.
-// 'wait' cobre o carregamento da cena, 'play' anima, 'name' mostra "Lasete".
-export type IntroStage = 'off' | 'wait' | 'play' | 'name';
+// 'wait' cobre o carregamento da cena e 'play' anima; a abertura não mostra texto.
+export type IntroStage = 'off' | 'wait' | 'play';
 
 export type IntroVariant = 'moldura' | 'encaixe';
 // Linha do tempo de cada versão, em segundos a partir do primeiro quadro da cena.
@@ -16,16 +16,14 @@ const TIMELINES = {
     joinEnd: 1.35,
     morphStart: 1.55,
     morphEnd: 2.7,
-    name: 2.6,
-    end: 3.6,
+    end: 3.15,
   },
   encaixe: {
     joinStart: 0.25,
     joinEnd: 1.05,
     morphStart: 1.3,
     morphEnd: 2.45,
-    name: 2.35,
-    end: 3.35,
+    end: 2.9,
   },
 };
 let variant: IntroVariant = 'moldura';
@@ -113,7 +111,6 @@ export function introFrame(now: number) {
     endIntro();
     return null;
   }
-  if (t >= timeline.name && stage === 'play') setStage('name');
   const morph = range(t, timeline.morphStart, timeline.morphEnd);
   // 1 no início, 0 no fim; passa levemente de 0 para dar o tranco do encaixe.
   const join = 1 - easeOutBack(range(t, timeline.joinStart, timeline.joinEnd));
