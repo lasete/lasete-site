@@ -1,9 +1,9 @@
 import {
   useEffect,
+  useRef,
   useState,
   type FormEvent,
   type ChangeEvent,
-  type ClipboardEvent,
   type DragEvent,
 } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -415,19 +415,10 @@ function AdminPanel() {
     event.preventDefault();
     event.stopPropagation();
     setDragging(false);
-    void uploadImage(event.dataTransfer.files[0]);
-  };
-  // Um arquivo solto fora da área não pode fazer o navegador abri-lo no lugar do painel.
-  const ignoreStrayFile = (event: DragEvent) => {
-    if (hasFiles(event)) event.preventDefault();
-  };
-  const pasteImage = (event: ClipboardEvent) => {
-    const file = [...event.clipboardData.files].find((entry) =>
-      entry.type.startsWith('image/'),
+    const files = [...event.dataTransfer.files];
+    void uploadImage(
+      files.find((file) => file.type.startsWith('image/')) ?? files[0],
     );
-    if (!file) return;
-    event.preventDefault();
-    void uploadImage(file);
   };
   const uploadImage = async (file: File | undefined) => {
     if (!file || !supabase || !editing || uploading) return;
@@ -469,6 +460,39 @@ function AdminPanel() {
       setUploading(false);
     }
   };
+  // Com o editor aberto, a página inteira participa: colar uma imagem a envia de qualquer
+  // foco, e um arquivo solto fora da área nunca faz o navegador abri-lo no lugar do painel.
+  const uploadImageRef = useRef(uploadImage);
+  uploadImageRef.current = uploadImage;
+  const editorOpen = !!editing;
+  useEffect(() => {
+    if (!editorOpen) return;
+    const keepPage = (event: globalThis.DragEvent) => {
+      if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
+    };
+    const paste = (event: globalThis.ClipboardEvent) => {
+      const clipboard = event.clipboardData;
+      const file = [...(clipboard?.files ?? [])].find((entry) =>
+        entry.type.startsWith('image/'),
+      );
+      if (!file) return;
+      // Planilhas e editores copiam texto junto com uma imagem; num campo, vale o texto.
+      const field =
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement;
+      if (field && clipboard?.types.includes('text/plain')) return;
+      event.preventDefault();
+      void uploadImageRef.current(file);
+    };
+    window.addEventListener('dragover', keepPage);
+    window.addEventListener('drop', keepPage);
+    document.addEventListener('paste', paste);
+    return () => {
+      window.removeEventListener('dragover', keepPage);
+      window.removeEventListener('drop', keepPage);
+      document.removeEventListener('paste', paste);
+    };
+  }, [editorOpen]);
   const saveSettings = (event: FormEvent) => {
     event.preventDefault();
     const urls =
@@ -944,9 +968,6 @@ function AdminPanel() {
               onSubmit={updateItem}
               className="editor-form"
               aria-busy={busy || uploading}
-              onPaste={pasteImage}
-              onDragOver={ignoreStrayFile}
-              onDrop={ignoreStrayFile}
             >
               <fieldset
                 disabled={busy || uploading}

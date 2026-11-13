@@ -5213,8 +5213,8 @@ p {
 .home-projects-section .project-preview-image {
   height: 260px;
 }
+/* --fracture-reach vem de Home.tsx, a mesma medida usada para desenhar o traçado. */
 .home-projects-split {
-  --fracture-reach: 32px;
   --project-pad: clamp(16px, 2vw, 24px);
   background: #070a09;
 }
@@ -5429,7 +5429,6 @@ p {
     grid-template-columns: 1fr;
   }
   .home-projects-split {
-    --fracture-reach: 28px;
     --project-pad: 18px;
   }
   .project-fracture-desktop {

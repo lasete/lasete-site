@@ -497,15 +497,13 @@ test('arquivo inválido ou texto colado não iniciam envio', async ({ page }) =>
     data.items.add(
       new File([new Uint8Array([1])], 'c.png', { type: 'image/png' }),
     );
-    return document
-      .querySelector('.editor-form')!
-      .dispatchEvent(
-        new DragEvent('drop', {
-          bubbles: true,
-          cancelable: true,
-          dataTransfer: data,
-        }),
-      );
+    return document.querySelector('.editor-form')!.dispatchEvent(
+      new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: data,
+      }),
+    );
   });
   expect(allowed).toBe(false);
   expect(page.url()).toBe(url);
@@ -516,4 +514,85 @@ test('arquivo inválido ou texto colado não iniciam envio', async ({ page }) =>
       before,
     );
   else await expect(page.locator('.upload-preview')).toHaveCount(0);
+});
+test('arquivo solto fora do formulário não tira o painel da tela', async ({
+  page,
+}) => {
+  await openProjectEditor(page);
+  const allowed = await page.evaluate(() =>
+    ['.dialog-overlay', '[role="dialog"] h2', 'body'].map((selector) => {
+      const data = new DataTransfer();
+      data.items.add(
+        new File([new Uint8Array([1])], 'c.png', { type: 'image/png' }),
+      );
+      const init = { bubbles: true, cancelable: true, dataTransfer: data };
+      const target = document.querySelector(selector)!;
+      return [
+        target.dispatchEvent(new DragEvent('dragover', init)),
+        target.dispatchEvent(new DragEvent('drop', init)),
+      ];
+    }),
+  );
+  expect(allowed.flat()).toEqual(Array(6).fill(false));
+});
+test('colar imagem funciona com o foco fora do formulário, e texto com imagem cola como texto', async ({
+  page,
+}) => {
+  await openProjectEditor(page);
+  const uploads: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/storage/v1/object/'))
+      uploads.push(request.url());
+  });
+  // Planilhas e editores copiam texto junto com uma imagem das células.
+  const prevented = await page.evaluate(() => {
+    const data = new DataTransfer();
+    data.setData('text/plain', 'células copiadas');
+    data.items.add(
+      new File([new Uint8Array([1])], 'cells.png', { type: 'image/png' }),
+    );
+    return !document.querySelector('[role="dialog"] textarea')!.dispatchEvent(
+      new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: data,
+      }),
+    );
+  });
+  expect(prevented).toBe(false);
+  await page.waitForTimeout(300);
+  expect(uploads).toHaveLength(0);
+  await sendToEditor(page, '[role="dialog"] h2', 'paste', {
+    name: 'b.webp',
+    type: 'image/webp',
+  });
+  await expect(page.locator('.upload-preview')).toHaveAttribute(
+    'src',
+    /lasete-images.*\.webp$/,
+  );
+});
+test('ao soltar vários arquivos, a primeira imagem é a usada', async ({
+  page,
+}) => {
+  await openProjectEditor(page);
+  await page.evaluate(() => {
+    const data = new DataTransfer();
+    data.items.add(
+      new File([new Uint8Array([1])], 'a.pdf', { type: 'application/pdf' }),
+    );
+    data.items.add(
+      new File([new Uint8Array([1])], 'b.png', { type: 'image/png' }),
+    );
+    document.querySelector('.image-upload-field')!.dispatchEvent(
+      new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: data,
+      }),
+    );
+  });
+  await expect(page.locator('.upload-preview')).toHaveAttribute(
+    'src',
+    /lasete-images.*\.png$/,
+  );
 });

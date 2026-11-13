@@ -69,6 +69,7 @@ function fractureEdge(layout: 'desktop' | 'mobile', side: -1 | 1) {
     .join(' ');
 }
 const fractureStyle = {
+  '--fracture-reach': `${FRACTURE_REACH}px`,
   '--fracture-before': fractureClip('desktop', -1),
   '--fracture-after': fractureClip('desktop', 1),
   '--fracture-before-mobile': fractureClip('mobile', -1),

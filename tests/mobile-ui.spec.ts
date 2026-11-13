@@ -270,3 +270,27 @@ test('divisória dos projetos corta na horizontal sem cobrir conteúdo nem a art
     }),
   ).toBe(true);
 });
+test('filetes da divisória acompanham a borda recortada dos cards no celular', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.keyboard.press('Shift');
+  const split = page.locator('.home-projects-split');
+  await split.scrollIntoViewIfNeeded();
+  const geometry = await split.evaluate((el) => {
+    const svg = el.querySelector('.project-fracture-mobile')!;
+    // Medidas de layout (offset*), que não mudam enquanto os cards animam ao entrar.
+    const [first, second] = [
+      ...el.querySelectorAll<HTMLElement>('.project-preview'),
+    ];
+    return {
+      drawn: parseFloat(getComputedStyle(svg).height),
+      viewBox: (svg as SVGSVGElement).viewBox.baseVal.height,
+      overlap: first.offsetTop + first.offsetHeight - second.offsetTop,
+    };
+  });
+  // O traçado é desenhado em px: a faixa e a sobreposição dos cards têm de usar a mesma medida.
+  // Tolerância de 1px para arredondamento de sub-pixel; o defeito original era de 8px.
+  expect(Math.abs(geometry.drawn - geometry.viewBox)).toBeLessThan(1);
+  expect(Math.abs(geometry.overlap - geometry.viewBox)).toBeLessThan(1);
+});
