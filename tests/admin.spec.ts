@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { mockSupabase } from './supabase-fixture';
 
 test('login valida senha, entra na área autorizada e sai', async ({ page }) => {
@@ -364,4 +364,235 @@ test('evento de sessão da mesma conta não desmonta o editor ao voltar à aba',
     page.getByRole('dialog').getByLabel('Nome completo', { exact: true }),
   ).toHaveValue('Pedro — edição em andamento');
   await expect(page.getByText('Conferindo seu acesso.')).toHaveCount(0);
+});
+
+test('área Projetos gera o cargo e ordena a diretoria entre Extensão e Financeiro', async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  const backend = await mockSupabase(page, { signedIn: true });
+  const teaching = backend.tables.members.find(
+    (member) => member.role === 'Diretor de Ensino',
+  )!;
+  Object.assign(teaching, {
+    role: 'Diretor Financeiro',
+    subtitle: 'Diretor Financeiro',
+    area: 'Financeiro',
+    category: 'Financeiro',
+  });
+  await page.goto('/admin', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('button', { name: /^Membros/ }).click();
+  await page
+    .getByRole('button', {
+      name: 'Editar Luiza Belfort Conceição dos Santos',
+      exact: true,
+    })
+    .click();
+  const dialog = page.getByRole('dialog');
+  await dialog
+    .getByRole('combobox', { name: /^Área/ })
+    .selectOption('Projetos');
+  await dialog
+    .getByRole('combobox', { name: /^Forma gramatical do cargo/ })
+    .selectOption('masculine');
+  await expect(dialog.locator('.member-role-preview')).toContainText(
+    'Diretor de Projetos',
+  );
+  await dialog
+    .getByRole('combobox', { name: /^Forma gramatical do cargo/ })
+    .selectOption('feminine');
+  await expect(dialog.locator('.member-role-preview')).toContainText(
+    'Diretora de Projetos',
+  );
+  await page.getByRole('button', { name: 'Salvar conteúdo' }).click();
+  await expect(page.getByRole('status')).toContainText('Alterações salvas');
+  await page.goto('/membros', { waitUntil: 'domcontentloaded' });
+  await page.getByRole('tab', { name: 'Diretoria', exact: true }).click();
+  const roles = await page
+    .locator('.member-card')
+    .evaluateAll((cards) => cards.map((card) => card.textContent ?? ''));
+  const at = (role: string) => roles.findIndex((text) => text.includes(role));
+  expect(at('Diretora de Projetos')).toBeGreaterThan(-1);
+  expect(at('Diretor de Extensão')).toBeLessThan(at('Diretora de Projetos'));
+  expect(at('Diretora de Projetos')).toBeLessThan(at('Diretor Financeiro'));
+});
+
+// Dispara drop ou paste sobre o seletor com um arquivo sintético (ou só texto, sem arquivo).
+async function sendToEditor(
+  page: Page,
+  selector: string,
+  kind: 'drop' | 'paste',
+  file?: { name: string; type: string },
+) {
+  await page.evaluate(
+    ({ selector, kind, file }) => {
+      const data = new DataTransfer();
+      if (file)
+        data.items.add(
+          new File([new Uint8Array([1, 2, 3])], file.name, { type: file.type }),
+        );
+      else data.setData('text/plain', 'texto colado');
+      const init = { bubbles: true, cancelable: true };
+      document
+        .querySelector(selector)!
+        .dispatchEvent(
+          kind === 'drop'
+            ? new DragEvent('drop', { ...init, dataTransfer: data })
+            : new ClipboardEvent('paste', { ...init, clipboardData: data }),
+        );
+    },
+    { selector, kind, file },
+  );
+}
+async function openProjectEditor(page: Page) {
+  await mockSupabase(page, { signedIn: true });
+  await page.goto('/admin', { waitUntil: 'domcontentloaded' });
+  await page
+    .getByRole('button', { name: 'Editar Capture the Flag', exact: true })
+    .click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+}
+test('imagem pode ser solta ou colada no editor', async ({ page }) => {
+  await openProjectEditor(page);
+  const preview = page.locator('.upload-preview');
+  await sendToEditor(page, '.image-upload-field', 'drop', {
+    name: 'a.png',
+    type: 'image/png',
+  });
+  await expect(preview).toHaveAttribute('src', /lasete-images.*\.png$/);
+  await sendToEditor(page, '.editor-form', 'paste', {
+    name: 'b.webp',
+    type: 'image/webp',
+  });
+  await expect(preview).toHaveAttribute('src', /lasete-images.*\.webp$/);
+  await expect(page.locator('.image-upload-field small')).toContainText(
+    'Arraste, cole (Ctrl+V) ou escolha um arquivo',
+  );
+});
+test('arquivo inválido ou texto colado não iniciam envio', async ({ page }) => {
+  await openProjectEditor(page);
+  const dialog = page.getByRole('dialog');
+  const before = (await page.locator('.upload-preview').count())
+    ? await page.locator('.upload-preview').getAttribute('src')
+    : null;
+  const uploads: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/storage/v1/object/'))
+      uploads.push(request.url());
+  });
+  const url = page.url();
+  await sendToEditor(page, '.image-upload-field', 'drop', {
+    name: 'a.pdf',
+    type: 'application/pdf',
+  });
+  await expect(dialog).toContainText('Escolha uma imagem JPG, PNG ou WebP.');
+  const title = dialog.getByLabel('Título', { exact: true });
+  await title.fill('abc');
+  await sendToEditor(page, '.editor-form', 'paste');
+  await expect(title).toHaveValue('abc');
+  await expect(dialog).not.toContainText('Enviando imagem');
+  // Soltar fora da área não pode fazer o navegador abrir o arquivo.
+  const allowed = await page.evaluate(() => {
+    const data = new DataTransfer();
+    data.items.add(
+      new File([new Uint8Array([1])], 'c.png', { type: 'image/png' }),
+    );
+    return document.querySelector('.editor-form')!.dispatchEvent(
+      new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: data,
+      }),
+    );
+  });
+  expect(allowed).toBe(false);
+  expect(page.url()).toBe(url);
+  expect(uploads).toHaveLength(0);
+  if (before)
+    await expect(page.locator('.upload-preview')).toHaveAttribute(
+      'src',
+      before,
+    );
+  else await expect(page.locator('.upload-preview')).toHaveCount(0);
+});
+test('arquivo solto fora do formulário não tira o painel da tela', async ({
+  page,
+}) => {
+  await openProjectEditor(page);
+  const allowed = await page.evaluate(() =>
+    ['.dialog-overlay', '[role="dialog"] h2', 'body'].map((selector) => {
+      const data = new DataTransfer();
+      data.items.add(
+        new File([new Uint8Array([1])], 'c.png', { type: 'image/png' }),
+      );
+      const init = { bubbles: true, cancelable: true, dataTransfer: data };
+      const target = document.querySelector(selector)!;
+      return [
+        target.dispatchEvent(new DragEvent('dragover', init)),
+        target.dispatchEvent(new DragEvent('drop', init)),
+      ];
+    }),
+  );
+  expect(allowed.flat()).toEqual(Array(6).fill(false));
+});
+test('colar imagem funciona com o foco fora do formulário, e texto com imagem cola como texto', async ({
+  page,
+}) => {
+  await openProjectEditor(page);
+  const uploads: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/storage/v1/object/'))
+      uploads.push(request.url());
+  });
+  // Planilhas e editores copiam texto junto com uma imagem das células.
+  const prevented = await page.evaluate(() => {
+    const data = new DataTransfer();
+    data.setData('text/plain', 'células copiadas');
+    data.items.add(
+      new File([new Uint8Array([1])], 'cells.png', { type: 'image/png' }),
+    );
+    return !document.querySelector('[role="dialog"] textarea')!.dispatchEvent(
+      new ClipboardEvent('paste', {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: data,
+      }),
+    );
+  });
+  expect(prevented).toBe(false);
+  await page.waitForTimeout(300);
+  expect(uploads).toHaveLength(0);
+  await sendToEditor(page, '[role="dialog"] h2', 'paste', {
+    name: 'b.webp',
+    type: 'image/webp',
+  });
+  await expect(page.locator('.upload-preview')).toHaveAttribute(
+    'src',
+    /lasete-images.*\.webp$/,
+  );
+});
+test('ao soltar vários arquivos, a primeira imagem é a usada', async ({
+  page,
+}) => {
+  await openProjectEditor(page);
+  await page.evaluate(() => {
+    const data = new DataTransfer();
+    data.items.add(
+      new File([new Uint8Array([1])], 'a.pdf', { type: 'application/pdf' }),
+    );
+    data.items.add(
+      new File([new Uint8Array([1])], 'b.png', { type: 'image/png' }),
+    );
+    document.querySelector('.image-upload-field')!.dispatchEvent(
+      new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: data,
+      }),
+    );
+  });
+  await expect(page.locator('.upload-preview')).toHaveAttribute(
+    'src',
+    /lasete-images.*\.png$/,
+  );
 });

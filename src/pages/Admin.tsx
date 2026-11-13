@@ -1,4 +1,11 @@
-import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ChangeEvent,
+  type DragEvent,
+} from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePointerHighlight } from '@/lib/pointer-highlight';
@@ -84,6 +91,7 @@ const departmentAreas = [
   'Pesquisa',
   'Ensino',
   'Extensão',
+  'Projetos',
   'Comunicação',
   'Financeiro',
 ];
@@ -237,6 +245,7 @@ function AdminPanel() {
   const { session } = useAuth();
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [params, setParams] = useSearchParams();
   const storageKey = `lasete-admin-view:${session?.user.id}`;
   const [view, setView] = useState(() => {
@@ -387,9 +396,32 @@ function AdminPanel() {
     };
     setEditing(item.type === 'member' ? withMemberProfile(item) : item);
   };
-  const upload = async (event: ChangeEvent<HTMLInputElement>) => {
+  // Escolher, soltar e colar passam pelo mesmo envio, com as mesmas regras.
+  const upload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !supabase || !editing) return;
+    event.target.value = '';
+    void uploadImage(file);
+  };
+  const hasFiles = (event: DragEvent) =>
+    event.dataTransfer.types.includes('Files');
+  const dragImage = (event: DragEvent) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setDragging(true);
+  };
+  const dropImage = (event: DragEvent) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setDragging(false);
+    const files = [...event.dataTransfer.files];
+    void uploadImage(
+      files.find((file) => file.type.startsWith('image/')) ?? files[0],
+    );
+  };
+  const uploadImage = async (file: File | undefined) => {
+    if (!file || !supabase || !editing || uploading) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       setError('Escolha uma imagem JPG, PNG ou WebP.');
       return;
@@ -428,6 +460,39 @@ function AdminPanel() {
       setUploading(false);
     }
   };
+  // Com o editor aberto, a página inteira participa: colar uma imagem a envia de qualquer
+  // foco, e um arquivo solto fora da área nunca faz o navegador abri-lo no lugar do painel.
+  const uploadImageRef = useRef(uploadImage);
+  uploadImageRef.current = uploadImage;
+  const editorOpen = !!editing;
+  useEffect(() => {
+    if (!editorOpen) return;
+    const keepPage = (event: globalThis.DragEvent) => {
+      if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
+    };
+    const paste = (event: globalThis.ClipboardEvent) => {
+      const clipboard = event.clipboardData;
+      const file = [...(clipboard?.files ?? [])].find((entry) =>
+        entry.type.startsWith('image/'),
+      );
+      if (!file) return;
+      // Planilhas e editores copiam texto junto com uma imagem; num campo, vale o texto.
+      const field =
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement;
+      if (field && clipboard?.types.includes('text/plain')) return;
+      event.preventDefault();
+      void uploadImageRef.current(file);
+    };
+    window.addEventListener('dragover', keepPage);
+    window.addEventListener('drop', keepPage);
+    document.addEventListener('paste', paste);
+    return () => {
+      window.removeEventListener('dragover', keepPage);
+      window.removeEventListener('drop', keepPage);
+      document.removeEventListener('paste', paste);
+    };
+  }, [editorOpen]);
   const saveSettings = (event: FormEvent) => {
     event.preventDefault();
     const urls =
@@ -1104,7 +1169,12 @@ function AdminPanel() {
                     </Field>
                   </>
                 )}
-                <div className="image-upload-field">
+                <div
+                  className={`image-upload-field ${dragging ? 'is-dragging' : ''}`}
+                  onDragOver={dragImage}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={dropImage}
+                >
                   <span>Imagem</span>
                   {editing.image && (
                     <img
@@ -1128,7 +1198,7 @@ function AdminPanel() {
                   <small>
                     {uploading
                       ? 'Enviando imagem…'
-                      : 'JPG, PNG ou WebP · até 5 MB.'}
+                      : 'JPG, PNG ou WebP · até 5 MB. Arraste, cole (Ctrl+V) ou escolha um arquivo.'}
                   </small>
                 </div>
                 <label className="publish-checkbox">

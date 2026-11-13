@@ -23,8 +23,9 @@ function rank(member: ContentItem) {
     if (/ensino/.test(role)) return 4;
     if (/comunicacao/.test(role)) return 5;
     if (/extensao/.test(role)) return 6;
-    if (/financeir/.test(role)) return 7;
-    return 8;
+    if (/projetos/.test(role)) return 7;
+    if (/financeir/.test(role)) return 8;
+    return 9;
   }
   if (member.group === 'Ligantes') return 20;
   if (member.group === 'Orientadores') return 30;

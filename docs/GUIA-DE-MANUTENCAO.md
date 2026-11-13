@@ -132,7 +132,7 @@ O if not exists permite rodar o comando novamente sem duplicar a coluna. Registr
 
 ### Adicionar ou editar um membro
 
-Em **Membros → Adicionar membro**, informe o nome e escolha o **Cargo**. As opções são presidente, vice-presidente, secretário-geral, diretor(a) de área, ligante e professor(a) orientador(a). O campo **Área** oferece Pesquisa, Ensino, Extensão, Comunicação e Financeiro para cargos de área; presidência, vice-presidência, secretaria e orientação recebem sua área correspondente automaticamente.
+Em **Membros → Adicionar membro**, informe o nome e escolha o **Cargo**. As opções são presidente, vice-presidente, secretário-geral, diretor(a) de área, ligante e professor(a) orientador(a). O campo **Área** oferece Pesquisa, Ensino, Extensão, Projetos, Comunicação e Financeiro para cargos de área; presidência, vice-presidência, secretaria e orientação recebem sua área correspondente automaticamente.
 
 Para cargos com flexão de gênero, escolha a **Forma gramatical do cargo**. Ela serve apenas para montar o texto publicado; o sistema não salva gênero como dado separado. A prévia mostra o cargo final, por exemplo, “Diretora de Comunicação”. A categoria do filtro (**Diretoria**, **Ligantes** ou **Orientadores**) é definida automaticamente pelo cargo escolhido.
 
@@ -140,7 +140,7 @@ As opções e a composição do texto ficam no início de **src/pages/Admin.tsx*
 
 ### Imagens
 
-Para conteúdo novo, a diretoria pode enviar a imagem pelo painel. As imagens existentes no site também podem estar em `public/images/`; dentro do conteúdo, o caminho é escrito como `/images/nome-do-arquivo.webp`. Para substituir uma imagem usada por um registro do banco, edite o registro pelo painel. Evite renomear um arquivo sem atualizar todas as referências.
+Para conteúdo novo, a diretoria pode enviar a imagem pelo painel: no editor, escolha o arquivo, arraste-o para o campo **Imagem** ou cole com Ctrl+V uma imagem copiada (JPG, PNG ou WebP, até 5 MB). As imagens existentes no site também podem estar em `public/images/`; dentro do conteúdo, o caminho é escrito como `/images/nome-do-arquivo.webp`. Para substituir uma imagem usada por um registro do banco, edite o registro pelo painel. Evite renomear um arquivo sem atualizar todas as referências.
 
 ### Variáveis e chaves
 

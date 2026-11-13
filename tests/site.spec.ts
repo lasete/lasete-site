@@ -764,7 +764,7 @@ test('404 preserva a recuperação mesmo sem WebGL', async ({ page }) => {
   await expect(page.locator('.hero')).toBeVisible();
 });
 
-test('abertura L7 cobre a Home, forma o cubo, mostra o nome e não repete ao voltar', async ({
+test('abertura L7 cobre a Home, forma o cubo sem texto e não repete ao voltar', async ({
   page,
 }) => {
   test.setTimeout(90000);
@@ -773,14 +773,14 @@ test('abertura L7 cobre a Home, forma o cubo, mostra o nome e não repete ao vol
   await expect(html).toHaveAttribute('data-intro', /wait|play/);
   await expect(page.locator('.site-header')).toBeHidden();
   await expect(page.locator('.matrix-canvas')).toBeHidden();
-  await expect(html).toHaveAttribute('data-intro', 'name', { timeout: 40000 });
-  await expect(page.locator('.hero-intro-name')).toHaveText('Lasete');
-  await expect(page.locator('.hero-intro-name')).toHaveCSS('opacity', '1');
+  // A abertura mostra só o símbolo: nenhum texto aparece na hero enquanto ela toca.
+  await expect(html).toHaveAttribute('data-intro', 'play', { timeout: 40000 });
+  await expect(page.locator('.hero-intro-name')).toHaveCount(0);
+  await expect(page.locator('.hero-scroll')).toBeHidden();
   await expect(html).not.toHaveAttribute('data-intro', /.*/, {
     timeout: 20000,
   });
   await expect(page.locator('.site-header')).toBeVisible();
-  await expect(page.locator('.hero-intro-name')).toHaveCSS('opacity', '0');
   const nav = page.getByRole('navigation', { name: 'Principal' });
   await nav.getByRole('link', { name: 'Projetos', exact: true }).click();
   await expect(page).toHaveURL(/\/projetos$/);
@@ -810,4 +810,149 @@ test('abertura L7 pode ser pulada e não toca fora da Home nem com movimento red
   await page.goto('/');
   await expect(html).not.toHaveAttribute('data-intro', /.*/);
   await expect(page.locator('.site-header')).toBeVisible();
+});
+test('botão da hero é uma pílula legível que leva à apresentação', async ({
+  page,
+}) => {
+  await openHome(page);
+  const cue = page.getByRole('link', { name: 'Explore a LASETE', exact: true });
+  await expect(cue).toBeVisible();
+  await expect(cue).toHaveCSS('font-size', '14px');
+  await expect(cue).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(cue).toHaveCSS('border-top-style', 'solid');
+  expect((await cue.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await expect(cue.locator('.scroll-mark')).toHaveCount(0);
+  await expect(cue.locator('svg')).toHaveCount(1);
+  await expect(cue).toHaveAttribute('href', '#conheca');
+});
+test('temas da liga ficam na Home, depois dos pilares, e saem de Pesquisas', async ({
+  page,
+}) => {
+  await openHome(page);
+  const fields = page.locator('.research-fields');
+  await expect(fields.getByText('Temas que dialogam com a liga')).toBeVisible();
+  await expect(fields.locator('.research-field')).toHaveCount(4);
+  const order = await page.evaluate(() =>
+    [...document.querySelector('.home-page')!.children].map(
+      (el) => el.className,
+    ),
+  );
+  const at = (name: string) => order.findIndex((c) => c.includes(name));
+  expect(at('home-intro')).toBeLessThan(at('research-fields'));
+  expect(at('research-fields')).toBeLessThan(at('network-interlude'));
+  await page.goto('/pesquisas');
+  await expect(
+    page.getByRole('heading', {
+      name: 'Investigações e aprendizados da liga.',
+    }),
+  ).toBeVisible();
+  await expect(page.locator('.research-fields')).toHaveCount(0);
+});
+test('busca de pesquisas filtra por título, tema e tipo, ignorando acentos', async ({
+  page,
+}) => {
+  await page.goto('/pesquisas');
+  const search = page.getByRole('searchbox', { name: 'Buscar pesquisas' });
+  const cards = page.locator('.research-results .content-card');
+  await expect(cards).toHaveCount(3);
+  await search.fill('visao computacional');
+  await expect(cards).toHaveCount(1);
+  await expect(cards.first()).toBeVisible();
+  await search.fill('SEGURANÇA');
+  await expect(cards).toHaveCount(1);
+  await search.fill('material educativo');
+  await expect(cards).toHaveCount(2);
+  await search.fill('educativo privacidade');
+  await expect(cards).toHaveCount(1);
+  await expect(page.locator('.research-search-status')).toHaveText(
+    '1 pesquisa',
+  );
+  await search.fill('   ');
+  await expect(cards).toHaveCount(3);
+  await search.fill('(.*?');
+  await expect(page.getByText('Nenhuma pesquisa encontrada')).toBeVisible();
+  await expect(page.locator('.research-search-status')).toHaveText(
+    '0 pesquisas',
+  );
+  await page.getByRole('button', { name: 'Limpar busca' }).click();
+  await expect(cards).toHaveCount(3);
+  await expect(search).toHaveValue('');
+});
+test('busca de pesquisas encontra pelo autor', async ({ page }) => {
+  const backend = await mockSupabase(page);
+  backend.tables.researches[0].author = 'Maria Souza, João Araújo';
+  await page.goto('/pesquisas');
+  const cards = page.locator('.research-results .content-card');
+  await page
+    .getByRole('searchbox', { name: 'Buscar pesquisas' })
+    .fill('joao araujo');
+  await expect(cards).toHaveCount(1);
+  await expect(cards.first()).toContainText('Maria Souza');
+});
+test('rodapé traz identidade, contato e copyright, sem links de páginas', async ({
+  page,
+}) => {
+  await page.goto('/a-liga');
+  const footer = page.locator('.site-footer');
+  await expect(footer.getByRole('navigation')).toHaveCount(0);
+  await expect(
+    footer.getByText('Liga Acadêmica de Segurança e Tecnologias Emergentes'),
+  ).toBeVisible();
+  await expect(footer.getByText('São Luís, Maranhão')).toBeVisible();
+  await expect(
+    footer.getByRole('link', { name: 'lasete.undb@gmail.com' }),
+  ).toHaveAttribute('href', 'mailto:lasete.undb@gmail.com');
+  await expect(
+    footer.getByRole('link', { name: 'Instagram da LASETE' }),
+  ).toBeVisible();
+  await expect(
+    footer.getByRole('link', { name: 'LinkedIn da LASETE' }),
+  ).toBeVisible();
+  await expect(
+    footer.getByRole('button', { name: 'Voltar ao topo' }),
+  ).toBeVisible();
+  await expect(footer.getByText('Ensino, pesquisa e extensão.')).toHaveCount(0);
+  const copy = footer.getByText(`© ${new Date().getFullYear()} LASETE`);
+  await expect(copy).toBeVisible();
+  const box = await copy.boundingBox(),
+    shell = await footer.locator('.shell').boundingBox();
+  expect(
+    Math.abs(box!.x + box!.width / 2 - (shell!.x + shell!.width / 2)),
+  ).toBeLessThan(2);
+});
+test('divisória dos projetos recorta os cards sem cobrir o conteúdo', async ({
+  page,
+}) => {
+  await openHome(page);
+  const split = page.locator('.home-projects-split');
+  await split.scrollIntoViewIfNeeded();
+  const cards = split.locator('.project-preview');
+  await expect(cards).toHaveCount(2);
+  for (const card of await cards.all())
+    expect(
+      await card.evaluate((el) => getComputedStyle(el).clipPath),
+    ).toContain('polygon');
+  await expect(split.locator('pattern')).toHaveCount(0);
+  await expect(
+    split.locator('.project-fracture-desktop .project-fracture-edge'),
+  ).toHaveCount(2);
+  for (const link of await split
+    .getByRole('link', { name: 'Explorar projeto' })
+    .all())
+    await link.click({ trial: true });
+});
+test('divisória some com um único projeto', async ({ page }) => {
+  const backend = await mockSupabase(page);
+  backend.tables.projects.splice(1);
+  await openHome(page);
+  const split = page.locator('.home-projects-split');
+  await split.scrollIntoViewIfNeeded();
+  const card = split.locator('.project-preview');
+  await expect(card).toHaveCount(1);
+  expect(await card.evaluate((el) => getComputedStyle(el).clipPath)).toBe(
+    'none',
+  );
+  await expect(split.locator('.project-fracture')).toHaveCount(0);
+  const [box, outer] = [await card.boundingBox(), await split.boundingBox()];
+  expect(box!.width).toBeGreaterThan(outer!.width - 4);
 });

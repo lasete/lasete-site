@@ -240,3 +240,57 @@ test('login no HackRF mobile mantém campos reais e cabe no viewport', async ({
     page.getByRole('navigation', { name: 'Seções do painel' }),
   ).toBeVisible();
 });
+test('divisória dos projetos corta na horizontal sem cobrir conteúdo nem a arte', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.keyboard.press('Shift');
+  const split = page.locator('.home-projects-split');
+  await split.scrollIntoViewIfNeeded();
+  const cards = split.locator('.project-preview');
+  await expect(cards).toHaveCount(2);
+  for (const card of await cards.all())
+    expect(
+      await card.evaluate((el) => getComputedStyle(el).clipPath),
+    ).toContain('polygon');
+  await expect(split.locator('.project-fracture-mobile')).toBeVisible();
+  await expect(split.locator('.project-fracture-desktop')).toBeHidden();
+  for (const link of await split
+    .getByRole('link', { name: 'Explorar projeto' })
+    .all())
+    await link.click({ trial: true });
+  const art = split.locator('.ai-project-art');
+  expect(
+    await art.evaluate((el) => {
+      const frame = el.getBoundingClientRect();
+      return [...el.children].every((child) => {
+        const box = child.getBoundingClientRect();
+        return box.top >= frame.top && box.bottom <= frame.bottom;
+      });
+    }),
+  ).toBe(true);
+});
+test('filetes da divisória acompanham a borda recortada dos cards no celular', async ({
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.keyboard.press('Shift');
+  const split = page.locator('.home-projects-split');
+  await split.scrollIntoViewIfNeeded();
+  const geometry = await split.evaluate((el) => {
+    const svg = el.querySelector('.project-fracture-mobile')!;
+    // Medidas de layout (offset*), que não mudam enquanto os cards animam ao entrar.
+    const [first, second] = [
+      ...el.querySelectorAll<HTMLElement>('.project-preview'),
+    ];
+    return {
+      drawn: parseFloat(getComputedStyle(svg).height),
+      viewBox: (svg as SVGSVGElement).viewBox.baseVal.height,
+      overlap: first.offsetTop + first.offsetHeight - second.offsetTop,
+    };
+  });
+  // O traçado é desenhado em px: a faixa e a sobreposição dos cards têm de usar a mesma medida.
+  // Tolerância de 1px para arredondamento de sub-pixel; o defeito original era de 8px.
+  expect(Math.abs(geometry.drawn - geometry.viewBox)).toBeLessThan(1);
+  expect(Math.abs(geometry.overlap - geometry.viewBox)).toBeLessThan(1);
+});
