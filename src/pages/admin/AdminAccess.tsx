@@ -20,10 +20,10 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { Brand, Emblem } from '@/components/Brand';
+import { Brand, Emblem } from '@/components/shared/Brand';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/lib/auth';
+import { supabase } from '@/lib/data/supabase';
+import { useAuth } from '@/lib/data/auth';
 
 export default function AdminAccess({ children }: { children: ReactNode }) {
   const { session, isAdmin, loading, error: accessError, retry } = useAuth();

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { PageIntro, SectionHeading } from '@/components/Shared';
+import { PageIntro } from '@/components/shared/PageIntro';
+import { SectionHeading } from '@/components/shared/SectionHeading';
 
 export default function Liga() {
   return (

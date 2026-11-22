@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Flag, Network, Plus } from 'lucide-react';
-import type { ContentItem } from '@/lib/content';
-import { safeUrl } from '@/lib/utils';
+import type { ContentItem } from '@/lib/data/content';
+import { safeImage, safeUrl } from '@/lib/utils';
 import { useMediaQuery } from '@/lib/preferences';
-import { safeImage } from './Shared';
-import { Emblem } from './Brand';
-import { Button } from './ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
+import { Emblem } from '@/components/shared/Brand';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 function AIProjectArtwork({
   title,
   category,
@@ -34,11 +33,7 @@ function AIProjectArtwork({
 export function ProjectPreview({ item }: { item: ContentItem }) {
   const image = item.id === 'ctf' ? '/images/ctf.webp' : item.image;
   return (
-    <article
-      className="project-preview"
-      data-project={item.id}
-      data-reveal
-    >
+    <article className="project-preview" data-project={item.id} data-reveal>
       <Link
         to={`/projetos?projeto=${encodeURIComponent(item.id)}`}
         className={`project-preview-image ${item.postCrop || item.id === 'ctf' ? 'post-crop' : ''}`}

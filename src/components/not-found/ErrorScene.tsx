@@ -1,7 +1,8 @@
 import { type RefObject } from 'react';
 import * as THREE from 'three';
 import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js';
-import HeroScene, { type AsciiModel, type PointerState } from './HeroScene';
+import HeroScene, { type AsciiModel } from '@/components/hero/HeroScene';
+import type { PointerState } from '@/lib/ascii-interaction';
 import { Ascii404Fallback } from './Ascii404Fallback';
 
 // This method exists in Three r186; the pinned DefinitelyTyped addon omits it.

@@ -1,4 +1,4 @@
-import { SectionHeading } from './Shared';
+import { SectionHeading } from '@/components/shared/SectionHeading';
 
 // Os temas são fixos: descrevem os campos de interesse da liga, não itens do painel.
 export function ResearchFields() {

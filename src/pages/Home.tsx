@@ -9,18 +9,15 @@ import { useReducedMotion } from '@/lib/preferences';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { Mail, Network } from 'lucide-react';
-import { useContent, usePublished } from '@/lib/content';
-import { safeUrl } from '@/lib/utils';
-import { Hero } from '@/components/Hero';
-import { NetworkInterlude } from '@/components/NetworkInterlude';
-import { ResearchFields } from '@/components/ResearchFields';
-import {
-  SectionHeading,
-  ContentCard,
-  ContentStatus,
-  safeImage,
-} from '@/components/Shared';
-import { ProjectPreview } from '@/components/Projects';
+import { useContent, usePublished } from '@/lib/data/content';
+import { safeImage, safeUrl } from '@/lib/utils';
+import { Hero } from '@/components/hero/Hero';
+import { NetworkInterlude } from '@/components/effects/NetworkInterlude';
+import { ResearchFields } from '@/components/sections/ResearchFields';
+import { SectionHeading } from '@/components/shared/SectionHeading';
+import { ContentCard } from '@/components/shared/ContentCard';
+import { ContentStatus } from '@/components/shared/ContentState';
+import { ProjectPreview } from '@/components/sections/Projects';
 import { Button } from '@/components/ui/button';
 // Rachadura entre os dois projetos: [posição ao longo do corte em %, desvio em px].
 // Os cards avançam FRACTURE_REACH px além do centro e são recortados neste traçado,

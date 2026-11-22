@@ -86,7 +86,8 @@ export function NetworkInterlude() {
 
           if (slice < slices - 1) {
             const next = positions[slice + 1][strand];
-            const alpha = 0.045 + (point.depth + 1) * 0.027 + point.influence * 0.11;
+            const alpha =
+              0.045 + (point.depth + 1) * 0.027 + point.influence * 0.11;
             context.strokeStyle = `rgba(151, 179, 113, ${alpha})`;
             context.beginPath();
             context.moveTo(point.x, point.y);
@@ -96,7 +97,8 @@ export function NetworkInterlude() {
 
           if (slice % 3 === 0) {
             const next = positions[slice][nextStrand];
-            const alpha = 0.035 + (point.depth + 1) * 0.018 + point.influence * 0.08;
+            const alpha =
+              0.035 + (point.depth + 1) * 0.018 + point.influence * 0.08;
             context.strokeStyle = `rgba(151, 179, 113, ${alpha})`;
             context.beginPath();
             context.moveTo(point.x, point.y);
@@ -105,7 +107,6 @@ export function NetworkInterlude() {
           }
         }
       }
-
     };
 
     const animate = (timestamp: number) => {

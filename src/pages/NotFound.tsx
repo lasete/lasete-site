@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Ascii404 } from '@/components/Ascii404';
+import { Ascii404 } from '@/components/not-found/Ascii404';
 
 /*
  * THESIS: A centered, tangible ASCII 404 leads a useful recovery, echoing the cube.

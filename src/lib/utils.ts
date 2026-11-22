@@ -13,3 +13,8 @@ export function safeUrl(value: string): string | undefined {
     return undefined;
   }
 }
+export function safeImage(src: string) {
+  return src.startsWith('data:image/') || src.startsWith('/images/')
+    ? src
+    : safeUrl(src);
+}

@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Mail, FileText, LockKeyhole } from 'lucide-react';
-import { Instagram, Linkedin } from '@/components/SocialIcons';
-import { useContent } from '@/lib/content';
+import { Instagram, Linkedin } from '@/components/shared/SocialIcons';
+import { useContent } from '@/lib/data/content';
 import { safeUrl } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ContentStatus } from '@/components/Shared';
+import { ContentStatus } from '@/components/shared/ContentState';
 
 export default function Participar() {
   const { data, loading, loadError } = useContent();

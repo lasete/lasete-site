@@ -6,7 +6,15 @@ import {
   type KeyboardEvent,
 } from 'react';
 import { useReducedMotion } from './preferences';
-import type { PointerState } from '@/components/HeroScene';
+// Estado do ponteiro compartilhado entre a interação e as cenas ASCII (cubo e 404).
+export type PointerState = {
+  x: number;
+  y: number;
+  hover: number;
+  rx: number;
+  ry: number;
+  invalidate?: () => void;
+};
 
 export function useAsciiInteraction(
   initialRotation: readonly [number, number] = [0.34, Math.PI / 4],

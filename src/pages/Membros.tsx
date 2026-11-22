@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
-import { memberGroups, orderMembers } from '@/lib/member-order';
-import { useContent, usePublished } from '@/lib/content';
-import { EmptyState, PageIntro, safeImage } from '@/components/Shared';
+import { memberGroups, orderMembers } from '@/lib/data/member-order';
+import { useContent, usePublished } from '@/lib/data/content';
+import { EmptyState } from '@/components/shared/ContentState';
+import { PageIntro } from '@/components/shared/PageIntro';
+import { safeImage } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const normalize = (s: string) =>

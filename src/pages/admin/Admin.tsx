@@ -9,7 +9,7 @@ import {
 import { Link, useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePointerHighlight } from '@/lib/pointer-highlight';
-import { memberGroups, orderMembers } from '@/lib/member-order';
+import { memberGroups, orderMembers } from '@/lib/data/member-order';
 import {
   Plus,
   Pencil,
@@ -34,10 +34,10 @@ import {
   ImagePlus,
 } from 'lucide-react';
 import AdminAccess from './AdminAccess';
-import { Matrix } from '@/components/Matrix';
-import { useAuth } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
-import { Brand } from '@/components/Brand';
+import { Matrix } from '@/components/effects/Matrix';
+import { useAuth } from '@/lib/data/auth';
+import { supabase } from '@/lib/data/supabase';
+import { Brand } from '@/components/shared/Brand';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -45,14 +45,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { safeUrl } from '@/lib/utils';
-import { safeImage } from '@/components/Shared';
+import { safeImage, safeUrl } from '@/lib/utils';
 import {
   useContent,
   type ContentItem,
   type ContentType,
   type Settings,
-} from '@/lib/content';
+} from '@/lib/data/content';
 const modules = [
   { type: 'project', label: 'Projetos', singular: 'projeto', icon: FolderCode },
   {

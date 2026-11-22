@@ -1,6 +1,8 @@
 import { useSearchParams } from 'react-router-dom';
-import { usePublished } from '@/lib/content';
-import { ContentCard, EmptyState, PageIntro } from '@/components/Shared';
+import { usePublished } from '@/lib/data/content';
+import { ContentCard } from '@/components/shared/ContentCard';
+import { EmptyState } from '@/components/shared/ContentState';
+import { PageIntro } from '@/components/shared/PageIntro';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export default function Atividades() {

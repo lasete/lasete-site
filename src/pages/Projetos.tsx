@@ -1,6 +1,7 @@
-import { usePublished } from '@/lib/content';
-import { EmptyState, PageIntro } from '@/components/Shared';
-import { ProjectExplorer } from '@/components/Projects';
+import { usePublished } from '@/lib/data/content';
+import { EmptyState } from '@/components/shared/ContentState';
+import { PageIntro } from '@/components/shared/PageIntro';
+import { ProjectExplorer } from '@/components/sections/Projects';
 
 export default function Projetos() {
   const items = usePublished('project');

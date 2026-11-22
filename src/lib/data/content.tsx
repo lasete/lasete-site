@@ -47,15 +47,6 @@ export type Settings = {
   formUrl: string;
 };
 export type SiteData = { version: 1; items: ContentItem[]; settings: Settings };
-export const navItems = [
-  { to: '/', label: 'Home', number: '01' },
-  { to: '/a-liga', label: 'A liga', number: '02' },
-  { to: '/membros', label: 'Membros', number: '03' },
-  { to: '/atividades', label: 'Atividades', number: '04' },
-  { to: '/pesquisas', label: 'Pesquisas', number: '05' },
-  { to: '/projetos', label: 'Projetos', number: '06' },
-  { to: '/participar', label: 'Participar e contato', number: '07' },
-];
 // O site só mostra o que vem do banco. Antes da resposta, ou se ela falhar, o estado é este:
 // vazio, sem conteúdo de exemplo. As telas conferem `loading` e `loadError` antes de mostrar
 // estados vazios ou links que dependem das configurações.

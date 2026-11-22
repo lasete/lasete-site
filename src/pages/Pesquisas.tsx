@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
-import { usePublished } from '@/lib/content';
-import { matchesResearch } from '@/lib/research-search';
-import { ContentCard, EmptyState, PageIntro } from '@/components/Shared';
+import { usePublished } from '@/lib/data/content';
+import { matchesResearch } from '@/lib/data/research-search';
+import { ContentCard } from '@/components/shared/ContentCard';
+import { EmptyState } from '@/components/shared/ContentState';
+import { PageIntro } from '@/components/shared/PageIntro';
 
 export default function Pesquisas() {
   const items = usePublished('research');

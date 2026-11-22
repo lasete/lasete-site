@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Emblem } from './Brand';
+import { Emblem } from '@/components/shared/Brand';
 import {
   endIntro,
   introFrame,
@@ -16,15 +16,8 @@ import {
   subscribeIntro,
   L7_SLANT,
   L7_SHIFT,
-} from '@/lib/intro-l7';
-export type PointerState = {
-  x: number;
-  y: number;
-  hover: number;
-  rx: number;
-  ry: number;
-  invalidate?: () => void;
-};
+} from './intro-l7';
+import type { PointerState } from '@/lib/ascii-interaction';
 export type AsciiModel = {
   makeGeometry: () => THREE.BufferGeometry;
   label: string;

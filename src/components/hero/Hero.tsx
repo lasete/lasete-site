@@ -9,7 +9,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowDown } from 'lucide-react';
-import { Emblem } from './Brand';
+import { Emblem } from '@/components/shared/Brand';
 const HeroScene = lazy(() => import('./HeroScene'));
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 export function Hero() {

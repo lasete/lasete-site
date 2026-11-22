@@ -1,11 +1,11 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './lib/auth';
-import { ContentProvider } from './lib/content';
-import { Layout } from './components/Layout';
+import { AuthProvider } from '@/lib/data/auth';
+import { ContentProvider } from '@/lib/data/content';
+import { Layout } from './components/layout/Layout';
 import NotFound from './pages/NotFound';
 const Home = lazy(() => import('./pages/Home'));
-const Admin = lazy(() => import('./pages/Admin'));
+const Admin = lazy(() => import('./pages/admin/Admin'));
 const Liga = lazy(() => import('./pages/Liga'));
 const Membros = lazy(() => import('./pages/Membros'));
 const Projetos = lazy(() => import('./pages/Projetos'));
