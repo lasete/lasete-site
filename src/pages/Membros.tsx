@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { memberGroups, orderMembers } from '@/lib/member-order';
-import { usePublished } from '@/lib/content';
+import { useContent, usePublished } from '@/lib/content';
 import { EmptyState, PageIntro, safeImage } from '@/components/Shared';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -12,6 +12,7 @@ const normalize = (s: string) =>
     .toLocaleLowerCase('pt-BR');
 
 export default function Membros() {
+  const { loading, loadError } = useContent();
   const people = orderMembers(usePublished('member'));
   const [group, setGroup] = useState('Todos');
   const [query, setQuery] = useState('');
@@ -49,10 +50,12 @@ export default function Membros() {
             />
           </label>
         </div>
-        <p className="results-count" aria-live="polite">
-          {filtered.length} {filtered.length === 1 ? 'pessoa' : 'pessoas'} ·{' '}
-          {group}
-        </p>
+        {!loading && !loadError && (
+          <p className="results-count" aria-live="polite">
+            {filtered.length} {filtered.length === 1 ? 'pessoa' : 'pessoas'} ·{' '}
+            {group}
+          </p>
+        )}
         <div className="member-grid">
           {filtered.map((person) => (
             <article className="member-card" key={person.id} data-reveal>

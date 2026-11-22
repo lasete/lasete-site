@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { ChevronDown, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { ContentItem } from '@/lib/content';
+import { useContent, type ContentItem } from '@/lib/content';
 import { safeUrl } from '@/lib/utils';
 export function PageIntro({
   label,
@@ -50,27 +50,47 @@ export function SectionHeading({
     </div>
   );
 }
-export function ExternalLink({
-  href,
-  children,
-  className = 'text-link',
+// Estado do carregamento do conteúdo: um esqueleto com o formato do que vai chegar (cartões,
+// ou um bloco único) enquanto o banco responde, ou o aviso de falha com nova tentativa.
+// `quiet` não mostra nada durante o carregamento. Com o conteúdo pronto, não renderiza nada.
+export function ContentStatus({
+  quiet = false,
+  shape = 'cards',
 }: {
-  href: string;
-  children: React.ReactNode;
-  className?: string;
+  quiet?: boolean;
+  shape?: 'cards' | 'block';
 }) {
-  const url = safeUrl(href, true);
-  return url ? (
-    <a
-      href={url}
-      target={url.startsWith('mailto:') ? undefined : '_blank'}
-      rel="noreferrer"
-      className={className}
-    >
-      {children}
-    </a>
-  ) : (
-    <span className={className}>{children}</span>
+  const { loading, loadError, reload } = useContent();
+  if (loading)
+    return quiet ? null : (
+      <div
+        className={`content-skeleton ${shape === 'cards' ? 'activity-grid' : 'content-skeleton-block'}`}
+        role="status"
+        aria-busy="true"
+      >
+        <span className="sr-only">Carregando conteúdo…</span>
+        {(shape === 'cards' ? [0, 1, 2] : [0]).map((index) => (
+          <div className="skeleton-card" aria-hidden="true" key={index}>
+            <div className="skeleton skeleton-image" />
+            {shape === 'cards' && (
+              <>
+                <div className="skeleton skeleton-line skeleton-meta" />
+                <div className="skeleton skeleton-line skeleton-title" />
+                <div className="skeleton skeleton-line" />
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  if (!loadError) return null;
+  return (
+    <div className="content-status content-status-error" role="alert">
+      <p>{loadError}</p>
+      <button type="button" onClick={reload}>
+        Tentar novamente
+      </button>
+    </div>
   );
 }
 export function EmptyState({
@@ -80,6 +100,9 @@ export function EmptyState({
   title: string;
   description: string;
 }) {
+  const { loading, loadError } = useContent();
+  // "Ainda não há nada" só vale depois que o banco respondeu.
+  if (loading || loadError) return <ContentStatus />;
   return (
     <div className="empty-state">
       <FileText size={26} strokeWidth={1.5} />

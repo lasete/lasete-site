@@ -24,7 +24,7 @@ Este guia é um mapa rápido do código atual. Para atualizar conteúdo que já 
 | Componentes básicos de botão, abas e diálogo                              | `src/components/ui/`                                                                      |
 | Configuração de login e autorização de administradores                    | `src/lib/auth.tsx`, `src/pages/AdminAccess.tsx` e tabela `lasete_admins` no Supabase      |
 | Conexão entre o site e as tabelas do Supabase                             | `src/lib/supabase.ts` e `src/lib/content-api.ts`                                          |
-| Estrutura e dados iniciais do banco                                       | `docs/supabase-setup.sql`                                                                 |
+| Estrutura e dados iniciais do banco                                       | `docs/banco/supabase-setup.sql`                                                           |
 | Rota direta na Vercel e página 404                                        | `vercel.json` e `src/App.tsx`                                                             |
 | Testes de navegação e painel                                              | `tests/`                                                                                  |
 
@@ -88,7 +88,7 @@ A pasta `components` ainda reúne componentes compartilhados, módulos visuais m
 | `src/styles.css`     | Estilos e variáveis visuais globais, incluindo as cores da marca.                                                                                                                                                                                  |
 | `public/images/`     | Imagens servidas diretamente pelo site em endereços como `/images/logo.webp`.                                                                                                                                                                      |
 | `src/images/`        | Arquivos de origem e materiais guardados no projeto. Para imagens públicas do site, use `public/images/` ou envie pelo painel.                                                                                                                     |
-| `docs/`              | Este guia, descoberta e requisitos do produto, instruções SQL e documentação de arte.                                                                                                                                                              |
+| `docs/`              | Este guia e quatro pastas: `banco/` (SQL do Supabase), `produto/` (descoberta e requisitos), `design/` (arte do login) e `superpowers/` (especificações e planos de trabalho).                                                                     |
 | `tests/`             | Testes automatizados de navegação, interface mobile e painel administrativo.                                                                                                                                                                       |
 
 ### O caminho de uma página
@@ -99,7 +99,7 @@ Cada página pública tem seu próprio arquivo: para editar Membros, abra `src/p
 
 ## Conteúdo do site e Supabase
 
-O conteúdo que a diretoria atualiza fica no Supabase. Para mudanças normais, use `/admin`; não altere os dados iniciais no código esperando que isso edite os registros atuais do banco.
+O conteúdo que a diretoria atualiza fica no Supabase. Para mudanças normais, use `/admin`; o código não guarda conteúdo de exemplo: tudo o que aparece em atividades, pesquisas, projetos, membros, mídia, comunicados e nos contatos vem do banco. Enquanto o banco responde, as páginas mostram um esqueleto de carregamento; se ele não responder, mostram um aviso com o botão “Tentar novamente”.
 
 | Tipo no painel                | Tabela no Supabase                             |
 | ----------------------------- | ---------------------------------------------- |
@@ -115,7 +115,7 @@ O conteúdo que a diretoria atualiza fica no Supabase. Para mudanças normais, u
 
 No painel, **Ensino** aparece como uma seção própria para facilitar a gestão. Seus registros continuam na tabela `activities`; a categoria “Ensino” os separa das demais atividades e os exibe na aba Ensino do site público.
 
-`src/lib/content.tsx` define os tipos de conteúdo, os dados iniciais de referência e o estado compartilhado usado pelas páginas. `content-api.ts` traduz os registros do banco para o formato usado no React. `supabase.ts` cria o cliente quando as variáveis de ambiente estão presentes. O SQL inicial e as políticas de acesso ficam em `docs/supabase-setup.sql`.
+`src/lib/content.tsx` define os tipos de conteúdo, a lista da navegação principal e o estado compartilhado usado pelas páginas (que começa vazio e só é preenchido com a resposta do banco). `content-api.ts` traduz os registros do banco para o formato usado no React. `supabase.ts` cria o cliente quando as variáveis de ambiente estão presentes. O SQL inicial e as políticas de acesso ficam em `docs/banco/supabase-setup.sql`.
 
 O login é feito pelo Supabase Auth. Uma conta só abre o painel se estiver autorizada em `lasete_admins`; as políticas RLS do banco também limitam quem pode ler rascunhos, editar conteúdo e enviar imagens. Não há cadastro público de administradores.
 
@@ -165,7 +165,7 @@ Na Vercel, o projeto usa Vite, o comando `npm run build` e a pasta `dist`. `verc
 
 - [Contexto do produto](../PRODUCT.md): objetivo, usuários e escopo.
 - [Direção visual](../DESIGN.md): decisões de aparência e movimento.
-- [Descoberta do projeto](01-project-discovery.md): informações de origem.
-- [Requisitos](02-requirements.md): comportamentos previstos.
-- [Instalação do Supabase](supabase-setup.sql): tabelas, regras, dados iniciais e armazenamento.
-- [Autorização de administradores de teste](authorize-test-admins.sql): SQL auxiliar para contas já criadas no Supabase Auth.
+- [Descoberta do projeto](produto/01-project-discovery.md): informações de origem.
+- [Requisitos](produto/02-requirements.md): comportamentos previstos.
+- [Instalação do Supabase](banco/supabase-setup.sql): tabelas, regras, dados iniciais e armazenamento.
+- [Autorização de administradores de teste](banco/authorize-test-admins.sql): SQL auxiliar para contas já criadas no Supabase Auth.

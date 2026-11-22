@@ -956,3 +956,84 @@ test('divisória some com um único projeto', async ({ page }) => {
   const [box, outer] = [await card.boundingBox(), await split.boundingBox()];
   expect(box!.width).toBeGreaterThan(outer!.width - 4);
 });
+
+test('enquanto o banco não responde, o site não mostra conteúdo de exemplo', async ({
+  page,
+}) => {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => (release = resolve));
+  // Segura as leituras do banco até o fim do teste; o fixture responde depois.
+  await page.route('https://*.supabase.co/rest/**', async (route) => {
+    await gate;
+    await route.fallback();
+  });
+  await page.goto('/pesquisas');
+  await expect(page.locator('.content-skeleton')).toBeVisible();
+  await expect(page.locator('.content-skeleton .skeleton-card')).toHaveCount(3);
+  await expect(page.getByRole('status')).toContainText('Carregando conteúdo…');
+  await expect(page.locator('.content-card')).toHaveCount(0);
+  await expect(page.getByText('Privacidade e proteção de dados')).toHaveCount(
+    0,
+  );
+  await expect(page.getByText('Um espaço para nossas pesquisas.')).toHaveCount(
+    0,
+  );
+  await expect(page.locator('.ai-nav')).toHaveCount(0);
+  await expect(
+    page.locator('.site-footer').getByRole('link', { name: /@/ }),
+  ).toHaveCount(0);
+  await page.goto('/membros');
+  await expect(page.locator('.content-skeleton')).toBeVisible();
+  await expect(page.locator('.results-count')).toHaveCount(0);
+  await openHome(page);
+  await expect(page.locator('.home-intro')).toBeVisible();
+  await expect(page.locator('.home-projects-split')).toHaveCount(0);
+  await expect(page.locator('.home-people')).toHaveCount(0);
+  await expect(page.locator('.selection-pill')).toHaveCount(0);
+  release();
+  await expect(page.locator('.ai-nav')).toBeVisible();
+  await expect(page.locator('.home-projects-split')).toHaveCount(1);
+  await expect(page.locator('.selection-pill')).toHaveCount(1);
+});
+test('se o banco falha, o site avisa e não mostra conteúdo de exemplo', async ({
+  page,
+}) => {
+  const backend = await mockSupabase(page);
+  backend.failReads = true;
+  await page.goto('/pesquisas');
+  await expect(
+    page.getByText('Não foi possível carregar os conteúdos.'),
+  ).toBeVisible();
+  await expect(page.locator('.content-card')).toHaveCount(0);
+  await expect(page.getByText('Privacidade e proteção de dados')).toHaveCount(
+    0,
+  );
+  const footer = page.locator('.site-footer');
+  await expect(footer.getByRole('link', { name: /@/ })).toHaveCount(0);
+  backend.failReads = false;
+  await page.getByRole('button', { name: 'Tentar novamente' }).click();
+  await expect(page.locator('.research-results .content-card')).toHaveCount(3);
+  await expect(
+    footer.getByRole('link', { name: 'lasete.undb@gmail.com' }),
+  ).toBeVisible();
+});
+test('participar não afirma o status do seletivo sem os dados do banco', async ({
+  page,
+}) => {
+  const backend = await mockSupabase(page);
+  backend.failReads = true;
+  await page.goto('/participar');
+  await expect(
+    page.getByText('Não foi possível carregar os conteúdos.'),
+  ).toBeVisible();
+  await expect(page.locator('.selection-banner')).toHaveCount(0);
+  await expect(page.locator('.contact-links a[href^="mailto:"]')).toHaveCount(
+    0,
+  );
+  backend.failReads = false;
+  await page.getByRole('button', { name: 'Tentar novamente' }).click();
+  await expect(page.locator('.selection-banner')).toBeVisible();
+  await expect(page.locator('.contact-links a[href^="mailto:"]')).toHaveCount(
+    1,
+  );
+});

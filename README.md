@@ -73,10 +73,10 @@ validadas no banco por RLS. Visitantes veem apenas conteúdo publicado.
 
 Configure `.env.local` usando `.env.example`. Na Vercel, use os mesmos nomes
 `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` e faça um novo deploy.
-Sem essas variáveis o site mostra o conteúdo inicial e o login fica indisponível;
+Sem essas variáveis o site abre sem conteúdo (apenas os textos fixos das páginas) e o login fica indisponível;
 não existe edição local ou acesso alternativo ao painel.
 
-O SQL de instalação está em `docs/supabase-setup.sql`. Ele inclui os 31 registros
+O SQL de instalação está em `docs/banco/supabase-setup.sql`. Ele inclui os 31 registros
 iniciais e o bucket público `lasete-images` (upload por administradores, até 5 MB).
 Se executado sobre a versão antiga, preserva `content_items` como cópia legada.
 Os testes de navegador simulam o Supabase e não escrevem no projeto remoto.
@@ -96,7 +96,7 @@ alternativa pode ser passada em `LASETE_TEST_ADMIN_PASSWORD`. Não use prefixo
 `VITE_` para chaves secretas.
 
 Também é possível criar as três contas em **Authentication → Users → Add user**,
-com e-mail confirmado, e depois executar `docs/authorize-test-admins.sql` no SQL Editor.
+com e-mail confirmado, e depois executar `docs/banco/authorize-test-admins.sql` no SQL Editor.
 
 As mudanças no seletivo controlam o aviso do site; não abrem ou fecham o Google
 Forms. `PRODUCT.md` registra as decisões de produto e `DESIGN.md` a direção visual.

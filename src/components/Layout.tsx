@@ -58,15 +58,17 @@ function Header() {
           ))}
         </nav>
         <div className="header-actions">
-          <Button asChild size="sm" className="ai-nav">
-            <a
-              href={safeUrl(data.settings.aiUrl)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              LASETE AI
-            </a>
-          </Button>
+          {safeUrl(data.settings.aiUrl) && (
+            <Button asChild size="sm" className="ai-nav">
+              <a
+                href={safeUrl(data.settings.aiUrl)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                LASETE AI
+              </a>
+            </Button>
+          )}
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <button className="menu-trigger" aria-label="Abrir menu">
@@ -102,12 +104,14 @@ function Header() {
                   </NavLink>
                 ))}
               </motion.nav>
-              <a
-                className="mobile-contact"
-                href={`mailto:${data.settings.email}`}
-              >
-                {data.settings.email}
-              </a>
+              {data.settings.email && (
+                <a
+                  className="mobile-contact"
+                  href={`mailto:${data.settings.email}`}
+                >
+                  {data.settings.email}
+                </a>
+              )}
               <p>
                 Liga Acadêmica de Segurança
                 <br />e Tecnologias Emergentes
@@ -136,24 +140,32 @@ function Footer() {
           </div>
           <div className="footer-contact">
             <span className="section-label">Contato</span>
-            <a href={`mailto:${data.settings.email}`}>{data.settings.email}</a>
+            {data.settings.email && (
+              <a href={`mailto:${data.settings.email}`}>
+                {data.settings.email}
+              </a>
+            )}
             <div className="footer-social">
-              <a
-                href={safeUrl(data.settings.instagram)}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Instagram da LASETE"
-              >
-                <Instagram size={20} />
-              </a>
-              <a
-                href={safeUrl(data.settings.linkedin)}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="LinkedIn da LASETE"
-              >
-                <Linkedin size={20} />
-              </a>
+              {safeUrl(data.settings.instagram) && (
+                <a
+                  href={safeUrl(data.settings.instagram)}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Instagram da LASETE"
+                >
+                  <Instagram size={20} />
+                </a>
+              )}
+              {safeUrl(data.settings.linkedin) && (
+                <a
+                  href={safeUrl(data.settings.linkedin)}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="LinkedIn da LASETE"
+                >
+                  <Linkedin size={20} />
+                </a>
+              )}
               <button
                 onClick={() =>
                   window.scrollTo({

@@ -4,7 +4,7 @@ STORY: conhecer a proposta, explorar iniciativas, encontrar pessoas e entrar em 
 FIRST VIEWPORT: somente volume ASCII e navbar; apresentação inicia abaixo da dobra.
 FORM: composição definida pela revisão do responsável, com conteúdo em seções próprias. */
 import { Link } from 'react-router-dom';
-import { useRef, type CSSProperties } from 'react';
+import { Fragment, useRef, type CSSProperties } from 'react';
 import { useReducedMotion } from '@/lib/preferences';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -14,7 +14,12 @@ import { safeUrl } from '@/lib/utils';
 import { Hero } from '@/components/Hero';
 import { NetworkInterlude } from '@/components/NetworkInterlude';
 import { ResearchFields } from '@/components/ResearchFields';
-import { SectionHeading, ContentCard, safeImage } from '@/components/Shared';
+import {
+  SectionHeading,
+  ContentCard,
+  ContentStatus,
+  safeImage,
+} from '@/components/Shared';
 import { ProjectPreview } from '@/components/Projects';
 import { Button } from '@/components/ui/button';
 // Rachadura entre os dois projetos: [posição ao longo do corte em %, desvio em px].
@@ -102,7 +107,7 @@ export default function Home() {
     },
     { scope: root, dependencies: [reduced], revertOnUpdate: true },
   );
-  const { data } = useContent();
+  const { data, loading, loadError } = useContent();
   const projects = usePublished('project'),
     activities = usePublished('activity'),
     studies = usePublished('research'),
@@ -113,6 +118,14 @@ export default function Home() {
   const fractured = preview.length === 2;
   const team = people.filter((p) => p.group === 'Diretoria').slice(0, 4);
   const s = data.settings;
+  const ready = !loading && !loadError;
+  // Só entram os canais que o banco informou.
+  const socialLinks = (
+    [
+      ['Instagram', safeUrl(s.instagram)],
+      ['LinkedIn', safeUrl(s.linkedin)],
+    ] as [string, string | undefined][]
+  ).filter((link): link is [string, string] => !!link[1]);
   return (
     <div ref={root} className="home-page">
       <Hero />
@@ -176,186 +189,215 @@ export default function Home() {
       </section>
       <ResearchFields />
       <NetworkInterlude />
-      <section className="shell section-space home-activities">
-        <SectionHeading
-          label="Atividades"
-          title="A liga acontece aqui."
-          link="Todas as atividades"
-          to="/atividades"
-        />
-        <div className="activity-grid">
-          {activities.slice(0, 3).map((item) => (
-            <ContentCard key={item.id} item={item} />
-          ))}
-        </div>
-      </section>
-      <section className="section-surface">
-        <div className="shell section-space home-projects-section">
+      <div className="shell">
+        <ContentStatus quiet />
+      </div>
+      {activities.length > 0 && (
+        <section className="shell section-space home-activities">
           <SectionHeading
-            label="Projetos"
-            title="Do estudo à prática."
-            link="Explorar projetos"
-            to="/projetos"
+            label="Atividades"
+            title="A liga acontece aqui."
+            link="Todas as atividades"
+            to="/atividades"
           />
-          <div
-            className={`home-projects home-projects-split ${fractured ? 'is-fractured' : ''}`}
-            style={fractured ? fractureStyle : undefined}
-          >
-            {preview.map((item) => (
-              <ProjectPreview item={item} key={item.id} />
+          <div className="activity-grid">
+            {activities.slice(0, 3).map((item) => (
+              <ContentCard key={item.id} item={item} />
             ))}
-            {fractured &&
-              (['desktop', 'mobile'] as const).map((layout) => (
-                <svg
-                  key={layout}
-                  className={`project-fracture project-fracture-${layout}`}
-                  viewBox={
-                    layout === 'desktop'
-                      ? `0 0 ${FRACTURE_REACH * 2} 1000`
-                      : `0 0 1000 ${FRACTURE_REACH * 2}`
-                  }
-                  preserveAspectRatio="none"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  {([-1, 1] as const).map((side) => (
-                    <path
-                      key={side}
-                      className="project-fracture-edge"
-                      data-tone={
-                        side === 1 && preview[1].id === 'lasete-ai'
-                          ? 'ai'
-                          : 'neutral'
-                      }
-                      d={fractureEdge(layout, side)}
-                    />
-                  ))}
-                </svg>
-              ))}
           </div>
-        </div>
-      </section>
-      <section className="shell home-knowledge">
-        <div className="home-studies" data-reveal>
-          <span className="section-label">Estudos e materiais</span>
-          <h2>O que a gente aprende também circula.</h2>
-          <p>
-            Segurança da informação, inteligência artificial e privacidade nos
-            materiais compartilhados pela liga.
-          </p>
-          <div className="study-links">
-            {studies.slice(0, 3).map((item) => (
-              <Link key={item.id} to="/pesquisas">
-                <span>{item.category.split(' · ').at(-1)}</span>
-                <h3>{item.title}</h3>
+        </section>
+      )}
+      {preview.length > 0 && (
+        <section className="section-surface">
+          <div className="shell section-space home-projects-section">
+            <SectionHeading
+              label="Projetos"
+              title="Do estudo à prática."
+              link="Explorar projetos"
+              to="/projetos"
+            />
+            <div
+              className={`home-projects home-projects-split ${fractured ? 'is-fractured' : ''}`}
+              style={fractured ? fractureStyle : undefined}
+            >
+              {preview.map((item) => (
+                <ProjectPreview item={item} key={item.id} />
+              ))}
+              {fractured &&
+                (['desktop', 'mobile'] as const).map((layout) => (
+                  <svg
+                    key={layout}
+                    className={`project-fracture project-fracture-${layout}`}
+                    viewBox={
+                      layout === 'desktop'
+                        ? `0 0 ${FRACTURE_REACH * 2} 1000`
+                        : `0 0 1000 ${FRACTURE_REACH * 2}`
+                    }
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    {([-1, 1] as const).map((side) => (
+                      <path
+                        key={side}
+                        className="project-fracture-edge"
+                        data-tone={
+                          side === 1 && preview[1].id === 'lasete-ai'
+                            ? 'ai'
+                            : 'neutral'
+                        }
+                        d={fractureEdge(layout, side)}
+                      />
+                    ))}
+                  </svg>
+                ))}
+            </div>
+          </div>
+        </section>
+      )}
+      {(studies.length > 0 || safeUrl(s.aiUrl)) && (
+        <section className="shell home-knowledge">
+          {studies.length > 0 && (
+            <div className="home-studies" data-reveal>
+              <span className="section-label">Estudos e materiais</span>
+              <h2>O que a gente aprende também circula.</h2>
+              <p>
+                Segurança da informação, inteligência artificial e privacidade
+                nos materiais compartilhados pela liga.
+              </p>
+              <div className="study-links">
+                {studies.slice(0, 3).map((item) => (
+                  <Link key={item.id} to="/pesquisas">
+                    <span>{item.category.split(' · ').at(-1)}</span>
+                    <h3>{item.title}</h3>
+                  </Link>
+                ))}
+              </div>
+              <Link className="text-link" to="/pesquisas">
+                Conhecer estudos e materiais
+              </Link>
+            </div>
+          )}
+          {safeUrl(s.aiUrl) && (
+            <div className="home-ai" data-reveal>
+              <Network size={30} strokeWidth={1.3} />
+              <span className="section-label">Uma iniciativa da LASETE</span>
+              <h2>LASETE AI</h2>
+              <p>
+                Conheça nossa experiência com inteligência artificial e explore
+                a ferramenta desenvolvida pela liga.
+              </p>
+              <Button asChild>
+                <a href={safeUrl(s.aiUrl)} target="_blank" rel="noreferrer">
+                  Explorar LASETE AI
+                </a>
+              </Button>
+              <small>Disponível no Streamlit.</small>
+            </div>
+          )}
+        </section>
+      )}
+      {team.length > 0 && (
+        <section className="shell section-space home-people">
+          <SectionHeading
+            label="Nossa equipe"
+            title="Uma liga feita por pessoas."
+            link="Conhecer todos os membros"
+            to="/membros"
+          />
+          <div className="people-preview">
+            {team.map((person) => (
+              <Link to="/membros" key={person.id} data-reveal>
+                {person.image ? (
+                  <img
+                    src={safeImage(person.image)}
+                    alt={person.title}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <div className="people-preview-initial">
+                    {person.title[0]}
+                  </div>
+                )}
+                <h3>{person.title}</h3>
+                <p>{person.role}</p>
               </Link>
             ))}
           </div>
-          <Link className="text-link" to="/pesquisas">
-            Conhecer estudos e materiais
-          </Link>
-        </div>
-        <div className="home-ai" data-reveal>
-          <Network size={30} strokeWidth={1.3} />
-          <span className="section-label">Uma iniciativa da LASETE</span>
-          <h2>LASETE AI</h2>
-          <p>
-            Conheça nossa experiência com inteligência artificial e explore a
-            ferramenta desenvolvida pela liga.
-          </p>
-          <Button asChild>
-            <a href={safeUrl(s.aiUrl)} target="_blank" rel="noreferrer">
-              Explorar LASETE AI
-            </a>
-          </Button>
-          <small>Disponível no Streamlit.</small>
-        </div>
-      </section>
-      <section className="shell section-space home-people">
-        <SectionHeading
-          label="Nossa equipe"
-          title="Uma liga feita por pessoas."
-          link="Conhecer todos os membros"
-          to="/membros"
-        />
-        <div className="people-preview">
-          {team.map((person) => (
-            <Link to="/membros" key={person.id} data-reveal>
-              {person.image ? (
-                <img
-                  src={safeImage(person.image)}
-                  alt={person.title}
-                  loading="lazy"
-                  decoding="async"
+        </section>
+      )}
+      {(media.length > 0 || notices.length > 0) && (
+        <section className="section-surface">
+          <div className="shell section-space home-updates">
+            {media.length > 0 && (
+              <div>
+                <SectionHeading
+                  label="LASETE na mídia"
+                  title="Além dos nossos encontros."
+                  link="Ver registros e participações"
+                  to="/atividades?aba=midia"
                 />
-              ) : (
-                <div className="people-preview-initial">{person.title[0]}</div>
-              )}
-              <h3>{person.title}</h3>
-              <p>{person.role}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-      <section className="section-surface">
-        <div className="shell section-space home-updates">
-          <div>
-            <SectionHeading
-              label="LASETE na mídia"
-              title="Além dos nossos encontros."
-              link="Ver registros e participações"
-              to="/atividades?aba=midia"
-            />
-            <div className="media-preview-list">
-              {media.slice(0, 2).map((item) => (
-                <Link to="/atividades?aba=midia" key={item.id} data-reveal>
-                  {item.image && (
-                    <div
-                      className={`media-preview-image ${item.postCrop ? 'post-crop' : ''}`}
-                    >
-                      <img src={safeImage(item.image)} alt="" loading="lazy" />
-                    </div>
-                  )}
-                  <div>
-                    <span className="meta">{item.category}</span>
+                <div className="media-preview-list">
+                  {media.slice(0, 2).map((item) => (
+                    <Link to="/atividades?aba=midia" key={item.id} data-reveal>
+                      {item.image && (
+                        <div
+                          className={`media-preview-image ${item.postCrop ? 'post-crop' : ''}`}
+                        >
+                          <img
+                            src={safeImage(item.image)}
+                            alt=""
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <span className="meta">{item.category}</span>
+                        <h3>{item.title}</h3>
+                        <p>{item.subtitle}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            {notices.length > 0 && (
+              <aside className="home-notices" data-reveal>
+                <h2>Fique por dentro</h2>
+                {notices.slice(0, 3).map((item) => (
+                  <div key={item.id}>
                     <h3>{item.title}</h3>
                     <p>{item.subtitle}</p>
+                    {safeUrl(item.url) && (
+                      <a
+                        className="text-link"
+                        href={safeUrl(item.url)}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Consultar informação
+                      </a>
+                    )}
                   </div>
+                ))}
+                <Link className="text-link" to="/atividades?aba=comunicados">
+                  Todos os comunicados
                 </Link>
-              ))}
-            </div>
+              </aside>
+            )}
           </div>
-          <aside className="home-notices" data-reveal>
-            <h2>Fique por dentro</h2>
-            {notices.slice(0, 3).map((item) => (
-              <div key={item.id}>
-                <h3>{item.title}</h3>
-                <p>{item.subtitle}</p>
-                {safeUrl(item.url) && (
-                  <a
-                    className="text-link"
-                    href={safeUrl(item.url)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Consultar informação
-                  </a>
-                )}
-              </div>
-            ))}
-            <Link className="text-link" to="/atividades?aba=comunicados">
-              Todos os comunicados
-            </Link>
-          </aside>
-        </div>
-      </section>
+        </section>
+      )}
       <section className="shell home-connect" data-reveal>
         <div>
-          <span className="selection-pill">
-            {s.selectionOpen
-              ? 'Inscrições abertas'
-              : 'Seletivo fechado no momento'}
-          </span>
+          {ready && (
+            <span className="selection-pill">
+              {s.selectionOpen
+                ? 'Inscrições abertas'
+                : 'Seletivo fechado no momento'}
+            </span>
+          )}
           <h2>Tem espaço para uma conversa.</h2>
           <p>
             Quer fazer parte, propor uma atividade ou conhecer melhor a liga?
@@ -365,22 +407,27 @@ export default function Home() {
             <Link to="/participar">Participar e contato</Link>
           </Button>
         </div>
-        <div className="home-connect-contact">
-          <Mail size={24} strokeWidth={1.5} />
-          <span>Fale com a LASETE</span>
-          <a href={`mailto:${s.email}`}>{s.email}</a>
-          <p>
-            Acompanhe também o{' '}
-            <a href={safeUrl(s.instagram)} target="_blank" rel="noreferrer">
-              Instagram
-            </a>{' '}
-            e o{' '}
-            <a href={safeUrl(s.linkedin)} target="_blank" rel="noreferrer">
-              LinkedIn
-            </a>
-            .
-          </p>
-        </div>
+        {(s.email || socialLinks.length > 0) && (
+          <div className="home-connect-contact">
+            <Mail size={24} strokeWidth={1.5} />
+            <span>Fale com a LASETE</span>
+            {s.email && <a href={`mailto:${s.email}`}>{s.email}</a>}
+            {socialLinks.length > 0 && (
+              <p>
+                Acompanhe também
+                {socialLinks.map(([name, href], index) => (
+                  <Fragment key={name}>
+                    {index > 0 && ' e'} o{' '}
+                    <a href={href} target="_blank" rel="noreferrer">
+                      {name}
+                    </a>
+                  </Fragment>
+                ))}
+                .
+              </p>
+            )}
+          </div>
+        )}
       </section>
     </div>
   );
